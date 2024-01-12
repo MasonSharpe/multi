@@ -34,7 +34,7 @@ public class NetworkManagerUI : MonoBehaviour
         client.onClick.AddListener(() =>
         {
             print(ipInput.text);
-            // transport.SetConnectionData("10.47.1.42", 7777);//(ipInput.text, 7777); 127.0.0.1
+             transport.SetConnectionData("127.0.0.1", 7777);// 127.0.0.1
 
             NetworkManager.Singleton.StartClient();
 

@@ -26,9 +26,11 @@ public class NetworkManagerUI : MonoBehaviour
         hostText.enabled = false;
         host.onClick.AddListener(() =>
         {
+            string IP = GetIP();
+            transport.SetConnectionData(IP, 7777);
             NetworkManager.Singleton.StartHost();
 
-            hostText.text = "Host IP: " + GetIP();
+            hostText.text = "Host IP: " + IP;
             hostText.enabled = true;
         });
         client.onClick.AddListener(() =>

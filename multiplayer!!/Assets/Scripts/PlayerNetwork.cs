@@ -6,6 +6,12 @@ using UnityEngine.UI;
 
 public class PlayerNetwork : NetworkBehaviour
 {
+    /*IDEAS
+    pretty much fall guys. no collision, ghost players. Make basic obstacle cources, make a leaderboard for who finishes the fastest.
+    have a pulse ability on a long cooldown that can apply a knockback force to players. some maps can having rising lava
+    for dynamic obstacles, rely on client transforms. have usernames above heads, and a lobby for when you aren't connected
+    also have cosmetic options in the lobby. game could reset after a certain number of rounds if i have time.
+    */
     public Transform spawnedObjectPrefab;
     public Slider slider;
     public Transform knife;

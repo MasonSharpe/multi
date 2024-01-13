@@ -871,7 +871,7 @@ GameObject:
   - component: {fileID: 391912313}
   - component: {fileID: 391912314}
   - component: {fileID: 391912315}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Border
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1255,7 +1255,7 @@ GameObject:
   - component: {fileID: 621992621}
   - component: {fileID: 621992622}
   - component: {fileID: 621992623}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Border (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1598,6 +1598,107 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 696353393}
   m_CullTransparentMesh: 1
+--- !u!1001 &822144433
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_Pivot.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_Pivot.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_AnchorMin.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3968350570607653769, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5724056486345357362, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: m_Name
+      value: PlayerUI
+      objectReference: {fileID: 0}
+    - target: {fileID: 8330084754221480224, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
+      propertyPath: GlobalObjectIdHash
+      value: 3419292809
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ec6acfd1452dc5745a5e6c88c7f720f8, type: 3}
 --- !u!1 &983923235
 GameObject:
   m_ObjectHideFlags: 0
@@ -1863,7 +1964,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
   m_ReferenceResolution: {x: 800, y: 600}
@@ -2292,7 +2393,7 @@ GameObject:
   - component: {fileID: 1479765104}
   - component: {fileID: 1479765105}
   - component: {fileID: 1479765106}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Border (3)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2308,8 +2409,8 @@ Transform:
   m_GameObject: {fileID: 1479765103}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.8859, y: -15.1333, z: 0}
-  m_LocalScale: {x: 51.688396, y: 21.895195, z: 1}
+  m_LocalPosition: {x: -8.9271, y: -15.1333, z: 0}
+  m_LocalScale: {x: 30.061972, y: 21.895195, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 539527183}
@@ -2809,7 +2910,7 @@ GameObject:
   - component: {fileID: 1934661093}
   - component: {fileID: 1934661094}
   - component: {fileID: 1934661095}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Border (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3139,6 +3240,7 @@ SceneRoots:
   - {fileID: 1525370946}
   - {fileID: 1182184718}
   - {fileID: 2144165337}
+  - {fileID: 822144433}
   - {fileID: 117692871}
   - {fileID: 539527183}
   - {fileID: 1067883174}

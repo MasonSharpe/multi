@@ -27,7 +27,7 @@ public class NetworkManagerUI : MonoBehaviour
         host.onClick.AddListener(() =>
         {
             string IP = GetIP();
-            transport.SetConnectionData(IP, 7777);
+            transport.SetConnectionData("127.0.0.1", 7777);
             NetworkManager.Singleton.StartHost();
 
             hostText.text = "Host IP: " + IP;
@@ -36,7 +36,7 @@ public class NetworkManagerUI : MonoBehaviour
         client.onClick.AddListener(() =>
         {
             
-             transport.SetConnectionData(ipInput.text, 7777);// 127.0.0.1
+             transport.SetConnectionData("127.0.0.1", 7777);// "127.0.0.1"     ipInput.text
 
             NetworkManager.Singleton.StartClient();
 

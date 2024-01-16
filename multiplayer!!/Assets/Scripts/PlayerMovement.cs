@@ -87,7 +87,7 @@ public class PlayerMovement : NetworkBehaviour {
         timeInRound += Time.deltaTime;
         cameraOffsetTimer -= Time.deltaTime;
 
-        if (timeInRound > 5 || SceneManager.GetActiveScene().name == "Lobby Scene") rocketTimer.Value = Mathf.Clamp(rocketTimer.Value + Time.deltaTime * 3, -3, 20);
+        if (timeInRound > 5 || SceneManager.GetActiveScene().name == "Lobby Scene") rocketTimer.Value = Mathf.Clamp(rocketTimer.Value + Time.deltaTime * 4, -3, 20);
 
         if (Input.GetKeyDown(KeyCode.LeftShift) && rocketTimer.Value >= 0) {
             Vector2 vector = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;

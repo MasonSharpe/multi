@@ -9,12 +9,13 @@ public class PlayerUI : MonoBehaviour
 {
     public TextMeshProUGUI rocketText;
     public Image rocketBackground;
+    public PlayerMovement movement;
+    public PlayerNetwork player;
+    public Transform leaderboard;
+    public TextMeshProUGUI spectateText;
 
     private void Update() {
-        if (PlayerMovement.instance == null) return;
-        print("dsa");
-        float fuel = PlayerMovement.instance.rocketTimer;
-
+        float fuel = player.spectating ? player.players[player.specIndex].movement.rocketTimer.Value : movement.rocketTimer.Value;
         rocketText.text = ((int)Mathf.Clamp(fuel * 5f, 0, 100) + "%").ToString();
 
         if (fuel > 0) {

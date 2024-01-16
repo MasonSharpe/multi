@@ -6,23 +6,26 @@ using Unity.Netcode;
 using TMPro;
 using System.Net;
 using Unity.Netcode.Transports.UTP;
+using UnityEngine.SceneManagement;
 
-
-
-public class NetworkManagerUI : MonoBehaviour
+public class NetworkManagerUI : NetworkBehaviour
 {
+    public static NetworkManagerUI instance;
+
     public Button server;
     public Button host;
     public Button client;
 
     public TextMeshProUGUI hostText;
     public TMP_InputField ipInput;
+    public TMP_InputField usernameInput;
 
     public UnityTransport transport;
 
 
     private void Awake()
     {
+        instance = this;
         hostText.enabled = false;
         host.onClick.AddListener(() =>
         {
@@ -32,6 +35,8 @@ public class NetworkManagerUI : MonoBehaviour
 
             hostText.text = "Host IP: " + IP;
             hostText.enabled = true;
+
+
         });
         client.onClick.AddListener(() =>
         {

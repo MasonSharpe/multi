@@ -8,7 +8,7 @@ using UnityEngine.SceneManagement;
 public class SceneManagement : NetworkBehaviour {
     public static SceneManagement instance;
     public PolygonCollider2D bounds;
-    private List<PlayerNetwork> players;
+    private List<PlayerNetwork> players = new();
 
     private void Awake() {
         instance = this;
@@ -44,6 +44,15 @@ public class SceneManagement : NetworkBehaviour {
             player.ResetKillerClientRpc(id);
         }
     }
-
+    [ServerRpc(RequireOwnership = false)]
+    public void PlayPingServerRpc(int id)
+    {
+        if (!IsServer) return;
+        if (players.Count == 0) players = FindObjectsOfType<PlayerNetwork>().ToList();
+        foreach (PlayerNetwork player in players)
+        {
+            player.PlayPingClientRpc(id);
+        }
+    }
 
 }

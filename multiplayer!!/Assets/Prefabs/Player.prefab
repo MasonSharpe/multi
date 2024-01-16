@@ -1552,6 +1552,8 @@ GameObject:
   - component: {fileID: -819393443644714198}
   - component: {fileID: 2501928541400071121}
   - component: {fileID: 3321518081118725607}
+  - component: {fileID: 546340087451899868}
+  - component: {fileID: 2896723608770453123}
   m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
@@ -1631,10 +1633,23 @@ MonoBehaviour:
   sceneManagement: {fileID: 0}
   leaderboardEntry: {fileID: 6776226507211587175, guid: a60588eda27f04d4192e43d99c8717e8, type: 3}
   players: []
+  clips:
+  - {fileID: 8300000, guid: 81222f629d8dc94438939e075aaf3e7c, type: 3}
+  - {fileID: 8300000, guid: d82924c03f29cd143aa7cb6fe0cfefcf, type: 3}
+  - {fileID: 8300000, guid: 5c891cc042f1f054caa77fe8bf1a230d, type: 3}
+  - {fileID: 8300000, guid: 404f296d9c4a667489635f045d3da536, type: 3}
+  - {fileID: 8300000, guid: 512ac7cb79ea8c945ac7252138126ac7, type: 3}
+  - {fileID: 8300000, guid: f7d24d346b710ed49822499f6734da71, type: 3}
+  - {fileID: 8300000, guid: f8fa26c074d91464c98fda468b653cba, type: 3}
+  - {fileID: 8300000, guid: b7a0185f39a5f9d4297c1f4046ec69ca, type: 3}
+  - {fileID: 8300000, guid: 5d1640fc448bd564fa4810bcd565e85e, type: 3}
+  - {fileID: 8300000, guid: 7114255596a542f46a3452fa46c38969, type: 3}
+  source: {fileID: 3321518081118725607}
   timeInRound: 0
   spectating: 0
   specIndex: 0
   roundInProgress: 0
+  invincibilityTimer: 0
 --- !u!50 &-1688532561800439176
 Rigidbody2D:
   serializedVersion: 4
@@ -1679,7 +1694,7 @@ MonoBehaviour:
   SyncPositionZ: 0
   SyncRotAngleX: 0
   SyncRotAngleY: 0
-  SyncRotAngleZ: 0
+  SyncRotAngleZ: 1
   SyncScaleX: 0
   SyncScaleY: 0
   SyncScaleZ: 0
@@ -1728,6 +1743,7 @@ MonoBehaviour:
   cameraShakePower: 0
   timeInRound: 0
   rb: {fileID: 0}
+  animator: {fileID: 546340087451899868}
   rocketTimer:
     m_InternalValue: 0
 --- !u!82 &3321518081118725607
@@ -1741,7 +1757,7 @@ AudioSource:
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
   m_audioClip: {fileID: 0}
-  m_PlayOnAwake: 1
+  m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
   Loop: 0
@@ -1826,6 +1842,97 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
+--- !u!95 &546340087451899868
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7860101925686641392}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: fc56a92b9a49f544d8ac7d2d0d3f39ba, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &2896723608770453123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7860101925686641392}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8d0727d5ae3244e3b569694d3912374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  TransitionStateInfoList:
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 1305701736
+    DestinationState: 1808434031
+    TransitionDuration: 0.25
+    TriggerNameHash: -904282986
+    TransitionIndex: 0
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 570877491
+    DestinationState: 1808434031
+    TransitionDuration: 0.25
+    TriggerNameHash: -904282986
+    TransitionIndex: 0
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 1808434031
+    DestinationState: -225098472
+    TransitionDuration: 0.25
+    TriggerNameHash: -1192900437
+    TransitionIndex: 0
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 1808434031
+    DestinationState: 570877491
+    TransitionDuration: 0.25
+    TriggerNameHash: -1831576448
+    TransitionIndex: 1
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: 1808434031
+    DestinationState: 1305701736
+    TransitionDuration: 0.25
+    TriggerNameHash: 1484738855
+    TransitionIndex: 2
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -225098472
+    DestinationState: 1808434031
+    TransitionDuration: 0.25
+    TriggerNameHash: -904282986
+    TransitionIndex: 0
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -225098472
+    DestinationState: 1305701736
+    TransitionDuration: 0.25
+    TriggerNameHash: 1484738855
+    TransitionIndex: 1
+  - IsCrossFadeExit: 0
+    Layer: 0
+    OriginatingState: -225098472
+    DestinationState: 570877491
+    TransitionDuration: 0.25
+    TriggerNameHash: -1831576448
+    TransitionIndex: 2
+  m_Animator: {fileID: 546340087451899868}
 --- !u!1 &8113799902127710894
 GameObject:
   m_ObjectHideFlags: 0
@@ -1891,7 +1998,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Spectating: Sharpeldfdsfdsfdsf
+  m_text: 'Spectating
 
     (Q to switch)'
   m_isRightToLeft: 0

@@ -35,13 +35,19 @@ public class PlayerNetwork : NetworkBehaviour
     public SceneManagement sceneManagement;
     public TextMeshProUGUI leaderboardEntry;
     public List<PlayerNetwork> players;
+    public AudioClip[] clips;
+    public AudioSource source;
 
     public float timeInRound = 0;
     public bool spectating = false;
     public int specIndex = 0;
     public bool roundInProgress = false;
+    public float invincibilityTimer = 0;
 
-    
+    /*PROBLEMS
+     * needs timer to show how fast you made it
+     * placement text is yellow for you
+     */
 
     public override void OnNetworkSpawn()
     {
@@ -55,6 +61,8 @@ public class PlayerNetwork : NetworkBehaviour
             sprite2.sortingOrder = 6;
             sprite3.sortingOrder = 7;
             visibleUsername.color = Color.yellow;
+            source.PlayOneShot(clips[9]);
+
         }
 
 
@@ -67,6 +75,7 @@ public class PlayerNetwork : NetworkBehaviour
         sprite2.color = color2.Value;
         visibleUsername.text = username.Value.ToString();
         timeInRound += Time.deltaTime;
+        invincibilityTimer -= Time.deltaTime;
 
         if (sceneManagement == null) {
             sceneManagement = FindObjectOfType<SceneManagement>(); 
@@ -90,7 +99,9 @@ public class PlayerNetwork : NetworkBehaviour
 
         if (timeInRound > 2 && SceneManager.GetActiveScene().name != "Lobby Scene") {
             countdown.enabled = true;
-            countdown.text = Mathf.Floor(4 - (timeInRound - 2)).ToString();
+            string text = Mathf.Floor(4 - (timeInRound - 2)).ToString();
+            if (!text.Equals(countdown.text) && timeInRound < 5.5f) source.PlayOneShot(clips[2]);
+            countdown.text = text;
             if (timeInRound > 5) {
                 countdown.enabled = false;
             }
@@ -119,7 +130,8 @@ public class PlayerNetwork : NetworkBehaviour
 
     
     public void ReachFinish() {
-        if (IsOwner && !spectating) {
+        if (IsOwner && !spectating && invincibilityTimer < 0) {
+            source.PlayOneShot(clips[9]);
             placement.Value = 0;
             int allVictorious = 0;
             foreach (PlayerNetwork player in players) {
@@ -151,6 +163,7 @@ public class PlayerNetwork : NetworkBehaviour
                 kills.Value++;
                 points.Value++;
                 sceneManagement.ResetKillerServerRpc((int)player.OwnerClientId);
+                source.PlayOneShot(clips[7]);
             }
 
         }
@@ -160,10 +173,13 @@ public class PlayerNetwork : NetworkBehaviour
     [ClientRpc]
     public void ResetKillerClientRpc(int id) {
         if (!IsOwner) return;
-        print(OwnerClientId);
-        print(id);
-        print(id == (int)OwnerClientId);
         if (id == (int)OwnerClientId) killer.Value = -1;
+    }
+    [ClientRpc]
+    public void PlayPingClientRpc(int id)
+    {
+        if (!IsOwner) return;
+        if (id == (int)OwnerClientId) source.PlayOneShot(clips[5]);
     }
 
     [ClientRpc]
@@ -218,7 +234,7 @@ public class PlayerNetwork : NetworkBehaviour
 
 
     public void GoToNextRace() {
-        if (IsServer && IsOwner) NetworkManager.Singleton.SceneManager.LoadScene("New Scene", LoadSceneMode.Single);
+        if (IsServer && IsOwner) NetworkManager.Singleton.SceneManager.LoadScene("Level1", LoadSceneMode.Single);
 
     }
 
@@ -230,6 +246,7 @@ public class PlayerNetwork : NetworkBehaviour
         movement.rb.velocity = Vector3.zero;
         movement.rocketHorizontalVelocity = 0;
         movement.timeInRound = 0;
+        invincibilityTimer = 5;
         roundInProgress = true;
         if (IsOwner) {
             placement.Value = -1;
@@ -247,15 +264,17 @@ public class PlayerNetwork : NetworkBehaviour
         UI.spectateText.transform.parent.gameObject.SetActive(false);
 
         players = FindObjectsOfType<PlayerNetwork>().ToList();
-
+        source.PlayOneShot(clips[8]);
     }
 
 
 
     public void Die() {
-        if (IsOwner) {
+        if (IsOwner && invincibilityTimer < 0 && roundInProgress) {
             movement.rb.velocity = Vector3.zero;
             placement.Value = players.Count - 1;
+            invincibilityTimer = 9999;
+            source.PlayOneShot(clips[3]);
 
             int allVictorious = 0;
             foreach (PlayerNetwork player in players) {

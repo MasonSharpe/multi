@@ -19,6 +19,8 @@ public class PlayerMovement : NetworkBehaviour {
     public Transform cameraOffset;
     private float cameraOffsetTimer = 0;
     public float cameraShakePower = 0;
+    private float footstepTimer = -1f;
+    private float jumpSoundTimer = -1;
 
     public float timeInRound = 0;
 
@@ -26,6 +28,7 @@ public class PlayerMovement : NetworkBehaviour {
     public Rigidbody2D rb;
     private bool isGrounded;
     private PlayerNetwork player;
+    public Animator animator;
 
     private NetworkVariable<bool> blastActive = new(false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     private NetworkVariable<float> blastPower = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
@@ -46,7 +49,7 @@ public class PlayerMovement : NetworkBehaviour {
         blast.size = new Vector2((blastPower.Value / 5f) + 1, (blastPower.Value / 5f) + 2);
 
         if (!IsOwner || player.spectating) return;
-        // Check if the character is grounded
+
         bool check = Physics2D.OverlapArea(new Vector2(groundCheck.position.x - 0.25f, groundCheck.position.y - 0.1f), new Vector2(groundCheck.position.x + 0.25f, groundCheck.position.y + 0.1f), groundLayer);
 
         if (check) isCoyote = false;
@@ -56,7 +59,17 @@ public class PlayerMovement : NetworkBehaviour {
             check = coyoteTime > 0;
             if (!check || Input.GetButton("Jump")) isCoyote = false;
         }
-        if (!isGrounded && check) player.killer.Value = -1;
+        if (!isGrounded && check)
+        {
+            player.killer.Value = -1;
+            animator.SetTrigger("justLeftGround");
+            animator.SetBool("grounded", false);
+        }
+        if (isGrounded && !check)
+        {
+            animator.SetTrigger("justGrounded");
+            animator.SetBool("grounded", true);
+        }
         isGrounded = check;
 
         if (Physics2D.OverlapBox(new Vector2(groundCheck.position.x, groundCheck.position.y + 1), Vector2.one * 1.1f, 0, groundLayer)) {
@@ -73,19 +86,36 @@ public class PlayerMovement : NetworkBehaviour {
             }
         }
 
-        // Handle player input for movement
-        rb.velocity = new Vector2(Input.GetAxis("Horizontal") * speed + rocketHorizontalVelocity, rb.velocity.y);
-        
+        float x = Input.GetAxis("Horizontal");
+        rb.velocity = new Vector2(x * speed + rocketHorizontalVelocity, rb.velocity.y);
+        print(x);
+        animator.SetFloat("x", x);
+        print(animator.GetFloat("x"));
+        if (x != 0 && isGrounded)
+        {
+            footstepTimer -= Time.deltaTime;
+            if (footstepTimer < 0)
+            {
+                player.source.PlayOneShot(player.clips[4], 0.1f);
+                footstepTimer = 0.5f;
+            }
+        }
 
-        // Handle player input for jumping
         if (isGrounded && Input.GetButton("Jump")) {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            if (jumpSoundTimer < 0)
+            {
+                player.source.PlayOneShot(player.clips[6]);
+                jumpSoundTimer = 0.5f;
+            }
+
         }
 
         invincibilityTimer -= Time.deltaTime;
         blastTimer -= Time.deltaTime;
         timeInRound += Time.deltaTime;
         cameraOffsetTimer -= Time.deltaTime;
+        jumpSoundTimer -= Time.deltaTime;
 
         if (timeInRound > 5 || SceneManager.GetActiveScene().name == "Lobby Scene") rocketTimer.Value = Mathf.Clamp(rocketTimer.Value + Time.deltaTime * 4, -3, 20);
 
@@ -103,13 +133,15 @@ public class PlayerMovement : NetworkBehaviour {
 
             rocketTimer.Value = -3;
 
+            player.source.PlayOneShot(player.clips[0]);
+            animator.SetTrigger("justBlasted");
+
         }
 
         if (blastActive.Value && blastTimer < 0) {
             blastActive.Value = false;
         }
 
-        print(cameraOffsetTimer);
         if (cameraOffsetTimer > 0) {
             cameraOffset.transform.localPosition = (Vector3)Random.insideUnitCircle * cameraShakePower;
         } else {
@@ -127,9 +159,14 @@ public class PlayerMovement : NetworkBehaviour {
             rocketHorizontalVelocity += force.x;
 
             invincibilityTimer = 0.2f;
-            player.killer.Value = (int)collision.transform.parent.GetComponent<PlayerNetwork>().OwnerClientId;
+            int dealer = (int)collision.transform.parent.GetComponent<PlayerNetwork>().OwnerClientId;
+            player.killer.Value = dealer;
+            player.sceneManagement.PlayPingServerRpc(dealer);
             cameraOffsetTimer = 0.4f;
             cameraShakePower = power / 16f;
+
+            player.source.PlayOneShot(player.clips[1]);
+            animator.SetTrigger("justGotBlasted");
         }
 
     }

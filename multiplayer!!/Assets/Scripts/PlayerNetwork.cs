@@ -32,6 +32,7 @@ public class PlayerNetwork : NetworkBehaviour
     public SpriteRenderer sprite3;
     public TextMeshProUGUI countdown;
     public PlayerMovement movement;
+    public TextMeshProUGUI objectiveText;
     public SceneManagement sceneManagement;
     public TextMeshProUGUI leaderboardEntry;
     public List<PlayerNetwork> players;
@@ -44,9 +45,11 @@ public class PlayerNetwork : NetworkBehaviour
     public bool roundInProgress = false;
     public float invincibilityTimer = 0;
 
-    /*PROBLEMS
-     * needs timer to show how fast you made it
-     * placement text is yellow for you
+    /*SONGS
+     * Lobby song: 25
+     * Short songs: 3!, 17, 33, 31, 21!
+     * Medium songs: 
+     * Long songs: 4!, 10, 20, 22!, 23, 24, 29, 30, 32, 34
      */
 
     public override void OnNetworkSpawn()
@@ -62,7 +65,11 @@ public class PlayerNetwork : NetworkBehaviour
             sprite3.sortingOrder = 7;
             visibleUsername.color = Color.yellow;
             source.PlayOneShot(clips[9]);
-
+            
+            if (SceneManager.GetActiveScene().name != "Lobby Scene") {
+                StartSpectating();
+                UI.spectateText.text = "you joined late! just chill here                       until the round ends, thanks <3";
+            }
         }
 
 
@@ -87,15 +94,18 @@ public class PlayerNetwork : NetworkBehaviour
         {
             sprite1.color = new Color(color1.Value.r, color1.Value.g, color1.Value.b, 0.7f);
             sprite2.color = new Color(color2.Value.r, color2.Value.g, color2.Value.b, 0.7f);
+            sprite3.color = new Color(1, 1, 1, 0.7f);
             return;
         }
 
         if (!spectating) {
             cam.Priority = 11;
+            string time = timeInRound < 5 ? "" : (timeInRound - 5).ToString("F2");
+            if (sceneManagement != null) objectiveText.text = sceneManagement.objective + "\r\n" + time;
+
         } else if (players[specIndex].placement.Value != -1 && roundInProgress) {
             CycleSpectator();
         }
-
 
         if (timeInRound > 2 && SceneManager.GetActiveScene().name != "Lobby Scene") {
             countdown.enabled = true;
@@ -163,7 +173,8 @@ public class PlayerNetwork : NetworkBehaviour
                 kills.Value++;
                 points.Value++;
                 sceneManagement.ResetKillerServerRpc((int)player.OwnerClientId);
-                source.PlayOneShot(clips[7]);
+                print("Asdsad");
+                source.PlayOneShot(clips[7], 0.5f);
             }
 
         }
@@ -225,6 +236,7 @@ public class PlayerNetwork : NetworkBehaviour
                 _ => "th"
             };
             entry.text = (i + 1) + suffix + ": " + players[i].username.Value + " - " + players[i].points.Value + " Points (" + players[i].kills.Value + " kills)";
+            if (players[i].OwnerClientId == OwnerClientId) entry.color = Color.yellow;       
         }
         UI.leaderboard.transform.parent.gameObject.SetActive(true);
 
@@ -243,6 +255,7 @@ public class PlayerNetwork : NetworkBehaviour
         transform.position = Vector3.zero;
         countdown.text = "";
         timeInRound = 0;
+        objectiveText.gameObject.SetActive(true);
         movement.rb.velocity = Vector3.zero;
         movement.rocketHorizontalVelocity = 0;
         movement.timeInRound = 0;

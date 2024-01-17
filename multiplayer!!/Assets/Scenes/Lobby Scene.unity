@@ -1434,6 +1434,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   bounds: {fileID: 310624885}
+  objective: 
 --- !u!4 &638394156
 Transform:
   m_ObjectHideFlags: 0

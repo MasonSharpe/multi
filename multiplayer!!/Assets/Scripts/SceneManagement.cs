@@ -9,6 +9,7 @@ public class SceneManagement : NetworkBehaviour {
     public static SceneManagement instance;
     public PolygonCollider2D bounds;
     private List<PlayerNetwork> players = new();
+    public string objective;
 
     private void Awake() {
         instance = this;

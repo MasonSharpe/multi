@@ -21,10 +21,12 @@ public class PlayerMovement : NetworkBehaviour {
     public float cameraShakePower = 0;
     private float footstepTimer = -1f;
     private float jumpSoundTimer = -1;
+    private float rotatedTimer = -1;
+    private Vector2 rotateVector = new();
 
     public float timeInRound = 0;
 
-
+    public ParticleSystem particles;
     public Rigidbody2D rb;
     private bool isGrounded;
     private PlayerNetwork player;
@@ -38,7 +40,6 @@ public class PlayerMovement : NetworkBehaviour {
 
 
     void Start() {
-        rb = GetComponent<Rigidbody2D>();
         player = GetComponent<PlayerNetwork>();
 
     }
@@ -62,13 +63,13 @@ public class PlayerMovement : NetworkBehaviour {
         if (!isGrounded && check)
         {
             player.killer.Value = -1;
-            animator.SetTrigger("justLeftGround");
-            animator.SetBool("grounded", false);
+            animator.SetTrigger("justGrounded");
+            animator.SetBool("grounded", true);
         }
         if (isGrounded && !check)
         {
-            animator.SetTrigger("justGrounded");
-            animator.SetBool("grounded", true);
+            animator.SetTrigger("justLeftGround");
+            animator.SetBool("grounded", false);
         }
         isGrounded = check;
 
@@ -88,9 +89,7 @@ public class PlayerMovement : NetworkBehaviour {
 
         float x = Input.GetAxis("Horizontal");
         rb.velocity = new Vector2(x * speed + rocketHorizontalVelocity, rb.velocity.y);
-        print(x);
         animator.SetFloat("x", x);
-        print(animator.GetFloat("x"));
         if (x != 0 && isGrounded)
         {
             footstepTimer -= Time.deltaTime;
@@ -105,7 +104,7 @@ public class PlayerMovement : NetworkBehaviour {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             if (jumpSoundTimer < 0)
             {
-                player.source.PlayOneShot(player.clips[6]);
+                player.source.PlayOneShot(player.clips[6], 0.5f);
                 jumpSoundTimer = 0.5f;
             }
 
@@ -116,6 +115,7 @@ public class PlayerMovement : NetworkBehaviour {
         timeInRound += Time.deltaTime;
         cameraOffsetTimer -= Time.deltaTime;
         jumpSoundTimer -= Time.deltaTime;
+        rotatedTimer -= Time.deltaTime;
 
         if (timeInRound > 5 || SceneManager.GetActiveScene().name == "Lobby Scene") rocketTimer.Value = Mathf.Clamp(rocketTimer.Value + Time.deltaTime * 4, -3, 20);
 
@@ -133,10 +133,23 @@ public class PlayerMovement : NetworkBehaviour {
 
             rocketTimer.Value = -3;
 
-            player.source.PlayOneShot(player.clips[0]);
-            animator.SetTrigger("justBlasted");
+            player.source.PlayOneShot(player.clips[0], 0.7f);
+            if (blastPower.Value > 3) {
+                animator.SetTrigger("justBlasted");
+                rotatedTimer = 1;
+                rotateVector = vector.normalized;
+                particles.Play();
+
+            }
+
+
 
         }
+        Vector2 rotation = rotatedTimer > 0 ? rotateVector : Vector2.zero;
+        player.sprite1.transform.up = rotation;
+        player.sprite2.transform.up = rotation;
+        player.sprite3.transform.up = rotation;
+        particles.transform.parent.up = rotation;
 
         if (blastActive.Value && blastTimer < 0) {
             blastActive.Value = false;
@@ -165,8 +178,10 @@ public class PlayerMovement : NetworkBehaviour {
             cameraOffsetTimer = 0.4f;
             cameraShakePower = power / 16f;
 
-            player.source.PlayOneShot(player.clips[1]);
+            player.source.PlayOneShot(player.clips[1], 0.7f);
             animator.SetTrigger("justGotBlasted");
+            rotatedTimer = 1;
+            rotateVector = vector.normalized;
         }
 
     }

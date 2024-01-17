@@ -52,6 +52,14 @@ public class PlayerNetwork : NetworkBehaviour
      * Long songs: 4!, 10, 20, 22!, 23, 24, 29, 30, 32, 34
      */
 
+    /*LEVElS
+     * Short: 4/5
+     * small platforms, lava closing in all sides       extreme: same but one tiny platform       lava rising       big arena, lava blocks everywhere
+     * Long: 9/10
+     * hole in the wall,  default obby      extreme default       see-saw       lava rising chill       building climbing       tight jumps     catch up to a running goal
+     * moving platforms everywhre       
+     */
+
     public override void OnNetworkSpawn()
     {
         if (IsOwner) {

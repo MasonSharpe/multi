@@ -10,9 +10,17 @@ public class SceneManagement : NetworkBehaviour {
     public PolygonCollider2D bounds;
     private List<PlayerNetwork> players = new();
     public string objective;
+    public AudioSource source;
+    private bool songPlayed = false;
 
     private void Awake() {
         instance = this;
+    }
+    private void Update() {
+        if (!songPlayed && players.Count != 0 && players[0].timeInRound > 5 && SceneManager.GetActiveScene().name != "Lobby Scene") {
+            source.Play();
+            songPlayed = true;
+        }
     }
     private void Start() {
         if (!IsServer) return;

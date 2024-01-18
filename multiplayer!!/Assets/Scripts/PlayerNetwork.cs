@@ -54,7 +54,7 @@ public class PlayerNetwork : NetworkBehaviour
 
     /*LEVElS
      * Short: 4/5
-     * small platforms, lava closing in all sides       extreme: same but one tiny platform       lava rising       big arena, lava blocks everywhere
+     * small platforms, lava closing in all sides       extreme: same but one tiny platform       lava rising(half-solid platforms    big arena, lava blocks everywhere
      * Long: 9/10
      * hole in the wall,  default obby      extreme default       see-saw       lava rising chill       building climbing       tight jumps     catch up to a running goal
      * moving platforms everywhre       
@@ -92,6 +92,8 @@ public class PlayerNetwork : NetworkBehaviour
         timeInRound += Time.deltaTime;
         invincibilityTimer -= Time.deltaTime;
 
+        bool isInLobby = SceneManager.GetActiveScene().name == "Lobby Scene";
+
         if (sceneManagement == null) {
             sceneManagement = FindObjectOfType<SceneManagement>(); 
             if (sceneManagement != null) confiner.m_BoundingShape2D = sceneManagement.bounds;
@@ -115,7 +117,7 @@ public class PlayerNetwork : NetworkBehaviour
             CycleSpectator();
         }
 
-        if (timeInRound > 2 && SceneManager.GetActiveScene().name != "Lobby Scene") {
+        if (timeInRound > 2 && !isInLobby) {
             countdown.enabled = true;
             string text = Mathf.Floor(4 - (timeInRound - 2)).ToString();
             if (!text.Equals(countdown.text) && timeInRound < 5.5f) source.PlayOneShot(clips[2]);
@@ -125,7 +127,11 @@ public class PlayerNetwork : NetworkBehaviour
             }
         }
 
-        if (SceneManager.GetActiveScene().name == "Lobby Scene") {
+        if (!roundInProgress && sceneManagement != null && !isInLobby) {
+            sceneManagement.source.volume -= Time.deltaTime / 60f;
+        }
+
+        if (isInLobby) {
             if (Input.GetKeyDown(KeyCode.Alpha1)) {
                 color1.Value = new Color(UnityEngine.Random.Range(0f, 1), UnityEngine.Random.Range(0f, 1), UnityEngine.Random.Range(0f, 1));
             }
@@ -179,9 +185,8 @@ public class PlayerNetwork : NetworkBehaviour
             foreach (PlayerNetwork player in players) {
             if ((ulong)player.killer.Value == OwnerClientId && player.OwnerClientId != OwnerClientId) {
                 kills.Value++;
-                points.Value++;
+                points.Value += 2;
                 sceneManagement.ResetKillerServerRpc((int)player.OwnerClientId);
-                print("Asdsad");
                 source.PlayOneShot(clips[7], 0.5f);
             }
 
@@ -219,10 +224,18 @@ public class PlayerNetwork : NetworkBehaviour
         }
 
         int reward = placement.Value switch {
-            0 => 6,
-            1 => 3,
-            2 => 2,
-            _ => 1
+            0 => 12,
+            1 => 6,
+            2 => 5,
+            3 => 4,
+            4 => 3,
+            5 => 2,
+            6 => 1,
+            7 => 1,
+            8 => 1,
+            9 => 1,
+            10 => 1,
+            _ => 0
         };
         points.Value += reward;
 

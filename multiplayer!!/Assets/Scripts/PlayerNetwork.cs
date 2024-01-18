@@ -54,10 +54,13 @@ public class PlayerNetwork : NetworkBehaviour
 
     /*LEVElS
      * Short: 4/5
-     * small platforms, lava closing in all sides       extreme: same but one tiny platform       lava rising(half-solid platforms    big arena, lava blocks everywhere
+     * small platforms, lava closing in all sides//       extreme: same but one tiny platform          big arena, lava blocks everywhere        lots of hazards
      * Long: 9/10
-     * hole in the wall,  default obby      extreme default       see-saw       lava rising chill       building climbing       tight jumps     catch up to a running goal
-     * moving platforms everywhre       
+     * hole in the wall,  default obby          extreme: lava rising    see-saw       lava rising chill       building climbing       tight jumps     catch up to a running goal
+     * moving platforms everywhre
+     * 
+     * 
+     * outline sprites, fuel sprite
      */
 
     public override void OnNetworkSpawn()
@@ -146,7 +149,7 @@ public class PlayerNetwork : NetworkBehaviour
         if (Input.GetKeyDown(KeyCode.P)) {
             if (IsServer) {
 
-                NetworkManager.Singleton.SceneManager.LoadScene("Level1", LoadSceneMode.Single);
+                NetworkManager.Singleton.SceneManager.LoadScene("Level4", LoadSceneMode.Single);
             }
         }
 
@@ -267,7 +270,7 @@ public class PlayerNetwork : NetworkBehaviour
 
 
     public void GoToNextRace() {
-        if (IsServer && IsOwner) NetworkManager.Singleton.SceneManager.LoadScene("Level1", LoadSceneMode.Single);
+        if (IsServer && IsOwner) NetworkManager.Singleton.SceneManager.LoadScene("Level4", LoadSceneMode.Single);
 
     }
 
@@ -277,6 +280,7 @@ public class PlayerNetwork : NetworkBehaviour
         countdown.text = "";
         timeInRound = 0;
         objectiveText.gameObject.SetActive(true);
+        movement.platformAdder = Vector2.zero;
         movement.rb.velocity = Vector3.zero;
         movement.rocketHorizontalVelocity = 0;
         movement.timeInRound = 0;

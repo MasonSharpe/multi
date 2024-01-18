@@ -2005,6 +2005,7 @@ MonoBehaviour:
   blast: {fileID: 7864683263495627501}
   cameraOffset: {fileID: 3299130159251552124}
   cameraShakePower: 0
+  platformAdder: {x: 0, y: 0}
   timeInRound: 0
   particles: {fileID: 5896641205448464572}
   rb: {fileID: -1688532561800439176}
@@ -7209,8 +7210,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: 1.7608, y: -1.5}
-  m_SizeDelta: {x: 436.7867, y: -3}
+  m_AnchoredPosition: {x: -0.0032, y: -19.904999}
+  m_SizeDelta: {x: 507.5703, y: -39.81}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8150179024715745884
 CanvasRenderer:

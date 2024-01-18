@@ -5,6 +5,7 @@ using UnityEngine;
 public class ObjectMove : MonoBehaviour
 {
     public float startTime;
+    public float stopTime = 999;
     public Vector2 direction;
 
     private float timer = 0;
@@ -17,6 +18,6 @@ public class ObjectMove : MonoBehaviour
     private void Update() {
         timer += Time.deltaTime;
 
-        if (timer > startTime) rb.velocity = direction;
+        if (timer > startTime && timer < stopTime) rb.velocity = direction;
     }
 }

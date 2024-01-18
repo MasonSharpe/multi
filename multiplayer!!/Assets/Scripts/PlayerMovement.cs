@@ -23,6 +23,7 @@ public class PlayerMovement : NetworkBehaviour {
     private float jumpSoundTimer = -1;
     private float rotatedTimer = -1;
     private Vector2 rotateVector = new();
+    public Vector2 platformAdder = new();
 
     public float timeInRound = 0;
 
@@ -88,7 +89,7 @@ public class PlayerMovement : NetworkBehaviour {
         }
 
         float x = Input.GetAxis("Horizontal");
-        rb.velocity = new Vector2(x * speed + rocketHorizontalVelocity, rb.velocity.y);
+        rb.velocity = new Vector2(x * speed + rocketHorizontalVelocity, rb.velocity.y) + platformAdder;
         animator.SetFloat("x", x);
         if (x != 0 && isGrounded)
         {
@@ -121,6 +122,7 @@ public class PlayerMovement : NetworkBehaviour {
 
         if (Input.GetKeyDown(KeyCode.LeftShift) && rocketTimer.Value >= 0) {
             Vector2 vector = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+            if (vector == Vector2.zero) vector = Vector2.up;
             rb.velocity = (vector.y * (rocketTimer.Value * 0.9f) + (rb.velocity.y / 2)) * Vector2.up;
             rocketHorizontalVelocity = vector.x * rocketTimer.Value * 0.9f;
 
@@ -184,5 +186,25 @@ public class PlayerMovement : NetworkBehaviour {
             rotateVector = vector.normalized;
         }
 
+
+
     }
+    private void OnTriggerStay2D(Collider2D collision)
+    {
+        if (collision.gameObject.layer == 12)
+        {
+            Vector2 vector2 = collision.transform.parent.GetComponent<Rigidbody2D>().velocity;
+            platformAdder = vector2;
+        }
+    }
+
+    private void OnTriggerExit2D(Collider2D collision)
+    {
+        if (collision.gameObject.layer == 12)
+        {
+            platformAdder = Vector2.zero;
+        }
+    }
+
+
 }

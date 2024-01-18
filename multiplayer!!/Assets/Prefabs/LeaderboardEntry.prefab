@@ -67,8 +67,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: '1st: Sharpel - 34 Points'
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 0161d805a3764c089bef00bfe00793f5, type: 2}
-  m_sharedMaterial: {fileID: 2147374, guid: 0161d805a3764c089bef00bfe00793f5, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: dfe79bd090c2451499dc9d98733ef4ba, type: 2}
+  m_sharedMaterial: {fileID: -3880793395465041477, guid: dfe79bd090c2451499dc9d98733ef4ba, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []

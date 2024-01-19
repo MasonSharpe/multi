@@ -22,6 +22,7 @@ public class PlayerMovement : NetworkBehaviour {
     private float footstepTimer = -1f;
     private float jumpSoundTimer = -1;
     private float rotatedTimer = -1;
+    public float refuelMult = 4;
     private Vector2 rotateVector = new();
     public Vector2 platformAdder = new();
 
@@ -118,7 +119,9 @@ public class PlayerMovement : NetworkBehaviour {
         jumpSoundTimer -= Time.deltaTime;
         rotatedTimer -= Time.deltaTime;
 
-        if (timeInRound > 5 || SceneManager.GetActiveScene().name == "Lobby Scene") rocketTimer.Value = Mathf.Clamp(rocketTimer.Value + Time.deltaTime * 4, -3, 20);
+        float newValue = Mathf.Clamp(rocketTimer.Value + Time.deltaTime * refuelMult, -3, 20);
+        if (rocketTimer.Value < 20 && newValue >= 20) player.source.PlayOneShot(player.clips[10], 0.7f);
+        if (timeInRound > 5 || SceneManager.GetActiveScene().name == "Lobby Scene") rocketTimer.Value = newValue;
 
         if (Input.GetKeyDown(KeyCode.LeftShift) && rocketTimer.Value >= 0) {
             Vector2 vector = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;

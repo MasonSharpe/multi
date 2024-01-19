@@ -35,6 +35,7 @@ public class PlayerNetwork : NetworkBehaviour
     public TextMeshProUGUI objectiveText;
     public SceneManagement sceneManagement;
     public TextMeshProUGUI leaderboardEntry;
+    public DeathEntry deathsEntry;
     public List<PlayerNetwork> players;
     public AudioClip[] clips;
     public AudioSource source;
@@ -54,13 +55,13 @@ public class PlayerNetwork : NetworkBehaviour
 
     /*LEVElS
      * Short: 4/5
-     * small platforms, lava closing in all sides//       extreme: same but one tiny platform          big arena, lava blocks everywhere        lots of hazards
+     * small platforms, lava closing in all sides//       extreme: same but one tiny platform//          big arena, lava blocks everywhere        lots of hazards
      * Long: 9/10
-     * hole in the wall,  default obby          extreme: lava rising    see-saw       lava rising chill       building climbing       tight jumps     catch up to a running goal
+     * hole in the wall      default obby//       extreme: lava rising//    see-saw       lava rising chill//       building climbing       tight jumps     catch up to a running goal
      * moving platforms everywhre
      * 
      * 
-     * outline sprites, fuel sprite
+     * 
      */
 
     public override void OnNetworkSpawn()
@@ -72,8 +73,8 @@ public class PlayerNetwork : NetworkBehaviour
             string text = NetworkManagerUI.instance.usernameInput.text;
             username.Value = text == "" ? "Unnamed Rocket " + OwnerClientId : text;
             sprite1.sortingOrder = 5;
-            sprite2.sortingOrder = 6;
-            sprite3.sortingOrder = 7;
+            sprite2.sortingOrder = 7;
+            sprite3.sortingOrder = 6;
             visibleUsername.color = Color.yellow;
             source.PlayOneShot(clips[9]);
             
@@ -172,7 +173,7 @@ public class PlayerNetwork : NetworkBehaviour
                 }
             }
             StartSpectating();
-
+            sceneManagement.HandleWinServerRpc((int)OwnerClientId);
             if (allVictorious >= players.Count - 1) {
                 sceneManagement.EndRaceServerRpc();
             }
@@ -183,19 +184,46 @@ public class PlayerNetwork : NetworkBehaviour
     }
 
     [ClientRpc]
+    public void HandleWinClientRpc(int clientId) {
+        if (!IsOwner) return;
+        DeathEntry entry = Instantiate(deathsEntry, UI.deathFeed);
+        entry.deathText = players[clientId].username.Value + " Reached the finish!";
+    }
+
+    [ClientRpc]
     public void HandleDeathClientRpc() {
         if (!IsOwner) return;
+
+
+
+
+        int alive = players.Count;
             foreach (PlayerNetwork player in players) {
+
+            if (player.killer.Value != -1) {
+                DeathEntry entry = Instantiate(deathsEntry, UI.deathFeed);
+                string text;
+                if (player.killer.Value == -2) {
+                    text = player.username.Value + " succumbed to the lava.";
+                } else {
+                    text = player.username.Value + " was killed by " + players[player.killer.Value];
+                }
+                entry.deathText = text;
+            }
+
+
             if ((ulong)player.killer.Value == OwnerClientId && player.OwnerClientId != OwnerClientId) {
                 kills.Value++;
                 points.Value += 2;
                 sceneManagement.ResetKillerServerRpc((int)player.OwnerClientId);
                 source.PlayOneShot(clips[7], 0.5f);
             }
-
+            if (player.placement.Value != -1) alive--;
         }
 
-        
+        if (alive < 6) movement.refuelMult += 2;
+        if (alive < 4) movement.refuelMult += 1;
+        if (alive < 2) movement.refuelMult += 1;
     }
     [ClientRpc]
     public void ResetKillerClientRpc(int id) {
@@ -280,6 +308,7 @@ public class PlayerNetwork : NetworkBehaviour
         countdown.text = "";
         timeInRound = 0;
         objectiveText.gameObject.SetActive(true);
+        sprite1.transform.parent.gameObject.SetActive(true);
         movement.platformAdder = Vector2.zero;
         movement.rb.velocity = Vector3.zero;
         movement.rocketHorizontalVelocity = 0;
@@ -303,6 +332,12 @@ public class PlayerNetwork : NetworkBehaviour
 
         players = FindObjectsOfType<PlayerNetwork>().ToList();
         source.PlayOneShot(clips[8]);
+
+        int alive = players.Count;
+        movement.refuelMult = 4;
+        if (alive < 6) movement.refuelMult += 2;
+        if (alive < 4) movement.refuelMult += 1;
+        if (alive < 2) movement.refuelMult += 1;
     }
 
 
@@ -312,7 +347,10 @@ public class PlayerNetwork : NetworkBehaviour
             movement.rb.velocity = Vector3.zero;
             placement.Value = players.Count - 1;
             invincibilityTimer = 9999;
+            sprite1.transform.parent.gameObject.SetActive(false);
             source.PlayOneShot(clips[3]);
+
+            if (killer.Value == -1) killer.Value = -2;
 
             int allVictorious = 0;
             foreach (PlayerNetwork player in players) {

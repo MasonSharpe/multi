@@ -63,5 +63,11 @@ public class SceneManagement : NetworkBehaviour {
             player.PlayPingClientRpc(id);
         }
     }
-
+    [ServerRpc(RequireOwnership = false)]
+    public void HandleWinServerRpc(int id) {
+        if (!IsServer) return;
+        foreach (PlayerNetwork player in players) {
+            player.HandleWinClientRpc(id);
+        }
+    }
 }

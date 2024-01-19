@@ -12,6 +12,7 @@ public class PlayerUI : MonoBehaviour
     public PlayerMovement movement;
     public PlayerNetwork player;
     public Transform leaderboard;
+    public Transform deathFeed;
     public TextMeshProUGUI spectateText;
 
     private void Update() {
@@ -19,7 +20,7 @@ public class PlayerUI : MonoBehaviour
         rocketText.text = ((int)Mathf.Clamp(fuel * 5f, 0, 100) + "%").ToString();
 
         if (fuel > 0) {
-            rocketBackground.color = new Color(0.2f, 0.2f, 0.2f, 1f);
+            rocketBackground.color = new Color(1f, 1f - fuel / 20f, 1f - fuel / 20f, 1f);
             rocketText.color = new Color(1f, 1f, 1f, 1f);
 
         } else {

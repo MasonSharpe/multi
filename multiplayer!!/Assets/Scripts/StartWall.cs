@@ -10,6 +10,7 @@ public class StartWall : MonoBehaviour
         timer += Time.deltaTime;
         
         if (timer > 5) {
+            SceneManagement.instance.PlaySong();
             Destroy(gameObject);
         }
     }

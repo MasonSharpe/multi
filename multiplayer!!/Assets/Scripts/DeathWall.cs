@@ -8,7 +8,9 @@ public class DeathWall : MonoBehaviour
         if (collision.gameObject.layer == 7)
         {
             PlayerNetwork player = collision.transform.parent.GetComponent<PlayerNetwork>();
-            player.Invoke(nameof(player.Die), Random.Range(0f, 0.3f));
+            if (player.IsOwner && player.placement.Value == -1 && !player.desiresDeath) {
+                SceneManagement.instance.HServerRpc((int)player.OwnerClientId);
+            }
         }
 
     }

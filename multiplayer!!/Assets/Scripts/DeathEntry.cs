@@ -9,6 +9,7 @@ public class DeathEntry : MonoBehaviour
     public string deathText = "";
     private float timer = 0;
     public TextMeshProUGUI text;
+    public int player;
 
     private void Start() {
         text = GetComponent<TextMeshProUGUI>();

@@ -5,6 +5,8 @@ using UnityEngine;
 public class FinishWall : MonoBehaviour
 {
     private void OnTriggerEnter2D(Collider2D collision) {
-        collision.transform.parent.GetComponent<PlayerNetwork>().ReachFinish();
+        if (collision.gameObject.layer == 7) {
+            collision.transform.parent.GetComponent<PlayerNetwork>().ReachFinish();
+        }
     }
 }

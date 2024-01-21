@@ -13,22 +13,29 @@ public class SceneManagement : NetworkBehaviour {
     public AudioSource source;
     private bool songPlayed = false;
 
+
     private void Awake() {
         instance = this;
     }
-    private void Update() {
-        if (!songPlayed && players.Count != 0 && players[0].timeInRound > 5 && SceneManager.GetActiveScene().name != "Lobby Scene") {
+
+    public void PlaySong() {
+        if (!songPlayed) {
             source.Play();
             songPlayed = true;
         }
     }
-    private void Start() {
-        if (!IsServer) return;
 
-        players = FindObjectsOfType<PlayerNetwork>().ToList();
-        foreach (PlayerNetwork player in players) {
-            player.StartRaceClientRpc();
-        }
+
+
+
+
+    private void Start() {
+    if (!IsServer) return;
+
+    players = FindObjectsOfType<PlayerNetwork>().ToList();
+    foreach (PlayerNetwork player in players) {
+        player.StartRaceClientRpc();
+    }
     }
     [ServerRpc(RequireOwnership = false)]
     public void EndRaceServerRpc() {
@@ -69,5 +76,13 @@ public class SceneManagement : NetworkBehaviour {
         foreach (PlayerNetwork player in players) {
             player.HandleWinClientRpc(id);
         }
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void HServerRpc(int id) {
+        if (!IsServer) return;
+        foreach (PlayerNetwork player in players) {
+            player.BClientRpc(id);
+        }
+
     }
 }

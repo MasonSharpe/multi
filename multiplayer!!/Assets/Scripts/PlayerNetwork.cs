@@ -10,6 +10,7 @@ using TMPro;
 using Unity.Collections;
 using System.Linq;
 
+
 public class PlayerNetwork : NetworkBehaviour
 {
     
@@ -22,6 +23,7 @@ public class PlayerNetwork : NetworkBehaviour
     private NetworkVariable<int> points = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     private NetworkVariable<int> kills = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     public NetworkVariable<int> killer = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<float> timeInLimbo = new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
     public PlayerUI UI;
     public TextMeshProUGUI visibleUsername;
@@ -45,6 +47,7 @@ public class PlayerNetwork : NetworkBehaviour
     public int specIndex = 0;
     public bool roundInProgress = false;
     public float invincibilityTimer = 0;
+    public bool desiresDeath = false;
 
     /*SONGS
      * Lobby song: 27
@@ -55,10 +58,15 @@ public class PlayerNetwork : NetworkBehaviour
 
     /*LEVElS
      * Short: 4/5
-     * small platforms, lava closing in all sides//       extreme: same but one tiny platform//          big arena, lava blocks everywhere        lots of hazards
+     * small platforms, lava closing in all sides//       extreme: same but one tiny platform//          big arena, lava blocks everywhere //       lots of hazards
      * Long: 9/10
-     * hole in the wall      default obby//       extreme: lava rising//    see-saw       lava rising chill//       building climbing       tight jumps     catch up to a running goal
+     * hole in the wall//      default obby//       extreme: lava rising//    see-saw//       lava rising chill//       building climbing       tight jumps//     catch up to a running goal
      * moving platforms everywhre
+     * 
+     * 
+     * screen fade
+     * 
+     * PROBLEMS:
      * 
      * 
      * 
@@ -112,6 +120,25 @@ public class PlayerNetwork : NetworkBehaviour
             return;
         }
 
+        if (desiresDeath) {
+            timeInLimbo.Value += Time.deltaTime;
+            if (timeInLimbo.Value > -0.7f) {
+                int lowest = 999;
+                foreach (PlayerNetwork player in players) {
+                    if ((int)player.OwnerClientId < lowest && player.timeInLimbo.Value > -1f) {
+                        lowest = (int)player.OwnerClientId;
+                    }
+                }
+                if (lowest == (int)OwnerClientId){
+                    Die();
+                    desiresDeath = false;
+                    timeInLimbo.Value = -1;
+                }
+
+            }
+
+        }
+
         if (!spectating) {
             cam.Priority = 11;
             string time = timeInRound < 5 ? "" : (timeInRound - 5).ToString("F2");
@@ -150,7 +177,7 @@ public class PlayerNetwork : NetworkBehaviour
         if (Input.GetKeyDown(KeyCode.P)) {
             if (IsServer) {
 
-                NetworkManager.Singleton.SceneManager.LoadScene("Level4", LoadSceneMode.Single);
+                NetworkManager.Singleton.SceneManager.LoadScene("Level1", LoadSceneMode.Single);
             }
         }
 
@@ -186,49 +213,64 @@ public class PlayerNetwork : NetworkBehaviour
     [ClientRpc]
     public void HandleWinClientRpc(int clientId) {
         if (!IsOwner) return;
+
+
         DeathEntry entry = Instantiate(deathsEntry, UI.deathFeed);
+        entry.player = clientId;
         entry.deathText = players[clientId].username.Value + " Reached the finish!";
     }
 
     [ClientRpc]
     public void HandleDeathClientRpc() {
         if (!IsOwner) return;
-
-
-
-
         int alive = players.Count;
+
             foreach (PlayerNetwork player in players) {
 
             if (player.killer.Value != -1) {
+
+                DeathEntry[] DeathEntries = UI.deathFeed.GetComponentsInChildren<DeathEntry>();
+                bool doubleFailsafe = false;
+                foreach (DeathEntry failEntry in DeathEntries) {
+                    if (failEntry.player == (int)player.OwnerClientId) {
+                        doubleFailsafe = true;
+                        break;
+                    }
+                }
+                if (doubleFailsafe) return;
+
                 DeathEntry entry = Instantiate(deathsEntry, UI.deathFeed);
                 string text;
                 if (player.killer.Value == -2) {
                     text = player.username.Value + " succumbed to the lava.";
                 } else {
-                    text = player.username.Value + " was killed by " + players[player.killer.Value];
+                    text = player.username.Value + " was killed by " + players[(int)player.OwnerClientId].username.Value;
                 }
                 entry.deathText = text;
-            }
 
-
-            if ((ulong)player.killer.Value == OwnerClientId && player.OwnerClientId != OwnerClientId) {
-                kills.Value++;
-                points.Value += 2;
+                if ((ulong)player.killer.Value == OwnerClientId && player.OwnerClientId != OwnerClientId) {
+                    kills.Value++;
+                    points.Value++;
+                    source.PlayOneShot(clips[7], 0.5f);
+                }
+                if (player.placement.Value != -1) alive--;
                 sceneManagement.ResetKillerServerRpc((int)player.OwnerClientId);
-                source.PlayOneShot(clips[7], 0.5f);
-            }
-            if (player.placement.Value != -1) alive--;
+
+            } 
+
         }
 
-        if (alive < 6) movement.refuelMult += 2;
+        if (alive < 6) movement.refuelMult += 1;
         if (alive < 4) movement.refuelMult += 1;
         if (alive < 2) movement.refuelMult += 1;
     }
+
     [ClientRpc]
     public void ResetKillerClientRpc(int id) {
         if (!IsOwner) return;
         if (id == (int)OwnerClientId) killer.Value = -1;
+        timeInLimbo.Value = -1;
+
     }
     [ClientRpc]
     public void PlayPingClientRpc(int id)
@@ -243,29 +285,37 @@ public class PlayerNetwork : NetworkBehaviour
         roundInProgress = false;
         if (placement.Value == -1) {
 
-            placement.Value = players.Count - 1;
+            List<int> placements = new();
             foreach (PlayerNetwork player in players) {
-                if (player.placement.Value == placement.Value && player != this) {
-                    placement.Value--;
+                if (player.placement.Value != -1) placements.Add(player.placement.Value);
+            }
+            placements.Sort();
+            int ind = 0;
+            bool reachedEnd = true;
+            for (int i = 0; i < placements.Count; i++) {
+                if (placements[i] != i) {
+                    ind = i;
+                    reachedEnd = false;
+                    break;
                 }
             }
+            placement.Value = reachedEnd ? players.Count - 1 : ind;
+
             movement.rb.velocity = Vector2.zero;
             movement.rocketHorizontalVelocity = 0;
             StartSpectating();
         }
-
         int reward = placement.Value switch {
-            0 => 12,
-            1 => 6,
-            2 => 5,
-            3 => 4,
-            4 => 3,
-            5 => 2,
+            0 => 7,
+            1 => 3,
+            2 => 3,
+            3 => 2,
+            4 => 2,
+            5 => 1,
             6 => 1,
             7 => 1,
             8 => 1,
             9 => 1,
-            10 => 1,
             _ => 0
         };
         points.Value += reward;
@@ -298,7 +348,7 @@ public class PlayerNetwork : NetworkBehaviour
 
 
     public void GoToNextRace() {
-        if (IsServer && IsOwner) NetworkManager.Singleton.SceneManager.LoadScene("Level4", LoadSceneMode.Single);
+        if (IsServer && IsOwner) NetworkManager.Singleton.SceneManager.LoadScene("Level" + UnityEngine.Random.Range(1, 5), LoadSceneMode.Single);
 
     }
 
@@ -307,6 +357,7 @@ public class PlayerNetwork : NetworkBehaviour
         transform.position = Vector3.zero;
         countdown.text = "";
         timeInRound = 0;
+        desiresDeath = false;
         objectiveText.gameObject.SetActive(true);
         sprite1.transform.parent.gameObject.SetActive(true);
         movement.platformAdder = Vector2.zero;
@@ -319,6 +370,7 @@ public class PlayerNetwork : NetworkBehaviour
             placement.Value = -1;
             killer.Value = -1;
             movement.rocketTimer.Value = 0;
+            timeInLimbo.Value = -1;
         }
         spectating = false;
         cam.Priority = 10;
@@ -335,7 +387,7 @@ public class PlayerNetwork : NetworkBehaviour
 
         int alive = players.Count;
         movement.refuelMult = 4;
-        if (alive < 6) movement.refuelMult += 2;
+        if (alive < 6) movement.refuelMult += 1;
         if (alive < 4) movement.refuelMult += 1;
         if (alive < 2) movement.refuelMult += 1;
     }
@@ -349,26 +401,34 @@ public class PlayerNetwork : NetworkBehaviour
             invincibilityTimer = 9999;
             sprite1.transform.parent.gameObject.SetActive(false);
             source.PlayOneShot(clips[3]);
-
             if (killer.Value == -1) killer.Value = -2;
-
+           // print("////");
             int allVictorious = 0;
             foreach (PlayerNetwork player in players) {
-
                 if (player.placement.Value == placement.Value && player != this) {
                     placement.Value--;
                 }
+                //print(player.placement.Value);
 
                 if (player.placement.Value != -1) {
                     allVictorious++;
                 }
             }
             StartSpectating();
-            sceneManagement.HandleDeathServerRpc();
+            sceneManagement.Invoke(nameof(sceneManagement.HandleDeathServerRpc), 0.08f);
 
             if (allVictorious >= players.Count - 1) {
                 sceneManagement.Invoke(nameof(sceneManagement.EndRaceServerRpc), 0.1f);
             }
+
+        }
+    }
+
+    [ClientRpc]
+    public void BClientRpc(int id) {
+        if (!IsOwner) return;
+        if (id == (int)OwnerClientId) {
+            desiresDeath = true;
         }
     }
 

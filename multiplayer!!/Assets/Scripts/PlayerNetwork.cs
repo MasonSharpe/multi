@@ -54,13 +54,15 @@ public class PlayerNetwork : NetworkBehaviour
      * Short songs: 3!, 17, 33, 31, 21!
      * Medium songs: 
      * Long songs: 4!, 10, 20, 22!, 23, 24, 29, 30, 32, 34
+     * 
+     * used: 1 6 10 7 11 9 13 5 8 16 2
      */
 
     /*LEVElS
      * Short: 4/5
-     * small platforms, lava closing in all sides//       extreme: same but one tiny platform//          big arena, lava blocks everywhere //       lots of hazards
+     * small platforms, lava closing in all sides//       extreme: same but one tiny platform//          big arena, lava blocks everywhere //       lots of hazards//
      * Long: 9/10
-     * hole in the wall//      default obby//       extreme: lava rising//    see-saw//       lava rising chill//       building climbing       tight jumps//     catch up to a running goal
+     * hole in the wall//      default obby//       extreme: lava rising//    see-saw//       lava rising chill//       building climbing       tight jumps//     catch up to a running goal//
      * moving platforms everywhre
      * 
      * 
@@ -144,7 +146,7 @@ public class PlayerNetwork : NetworkBehaviour
             string time = timeInRound < 5 ? "" : (timeInRound - 5).ToString("F2");
             if (sceneManagement != null) objectiveText.text = sceneManagement.objective + "\r\n" + time;
 
-        } else if (players[specIndex].placement.Value != -1 && roundInProgress) {
+        } else if (players[specIndex].placement.Value != -1) {
             CycleSpectator();
         }
 
@@ -180,14 +182,27 @@ public class PlayerNetwork : NetworkBehaviour
                 NetworkManager.Singleton.SceneManager.LoadScene("Level1", LoadSceneMode.Single);
             }
         }
+        if (Input.GetKeyDown(KeyCode.L)) {
+            if (IsServer) {
+
+                sceneManagement.ResetScoreServerRpc();
+            }
+        }
 
     }
+    [ClientRpc]
+    public void ResetScoreClientRpc() {
+        if (IsOwner) {
+            points.Value = 0;
+        }
+    }
 
-    
+
     public void ReachFinish() {
         if (IsOwner && !spectating && invincibilityTimer < 0) {
             source.PlayOneShot(clips[9]);
             placement.Value = 0;
+            points.Value += 4;
             int allVictorious = 0;
             foreach (PlayerNetwork player in players) {
 
@@ -225,7 +240,7 @@ public class PlayerNetwork : NetworkBehaviour
         if (!IsOwner) return;
         int alive = players.Count;
 
-            foreach (PlayerNetwork player in players) {
+        foreach (PlayerNetwork player in players) {
 
             if (player.killer.Value != -1) {
 
@@ -250,7 +265,7 @@ public class PlayerNetwork : NetworkBehaviour
 
                 if ((ulong)player.killer.Value == OwnerClientId && player.OwnerClientId != OwnerClientId) {
                     kills.Value++;
-                    points.Value++;
+                    points.Value += 2;
                     source.PlayOneShot(clips[7], 0.5f);
                 }
                 if (player.placement.Value != -1) alive--;
@@ -260,9 +275,9 @@ public class PlayerNetwork : NetworkBehaviour
 
         }
 
-        if (alive < 6) movement.refuelMult += 1;
-        if (alive < 4) movement.refuelMult += 1;
-        if (alive < 2) movement.refuelMult += 1;
+        if (alive < 6) movement.refuelMult = 5;
+        if (alive < 4) movement.refuelMult = 6;
+        if (alive < 2) movement.refuelMult = 7;
     }
 
     [ClientRpc]
@@ -299,20 +314,21 @@ public class PlayerNetwork : NetworkBehaviour
                     break;
                 }
             }
-            placement.Value = reachedEnd ? players.Count - 1 : ind;
-
+            int value = reachedEnd ? players.Count - 1 : ind;
+            placement.Value = value;
+            if (value == 0) source.PlayOneShot(clips[9]);
             movement.rb.velocity = Vector2.zero;
             movement.rocketHorizontalVelocity = 0;
             StartSpectating();
         }
         int reward = placement.Value switch {
-            0 => 7,
-            1 => 3,
-            2 => 3,
-            3 => 2,
-            4 => 2,
-            5 => 1,
-            6 => 1,
+            0 => 8,
+            1 => 4,
+            2 => 4,
+            3 => 3,
+            4 => 3,
+            5 => 2,
+            6 => 2,
             7 => 1,
             8 => 1,
             9 => 1,
@@ -348,7 +364,7 @@ public class PlayerNetwork : NetworkBehaviour
 
 
     public void GoToNextRace() {
-        if (IsServer && IsOwner) NetworkManager.Singleton.SceneManager.LoadScene("Level" + UnityEngine.Random.Range(1, 5), LoadSceneMode.Single);
+        if (IsServer && IsOwner) NetworkManager.Singleton.SceneManager.LoadScene("Level" + UnityEngine.Random.Range(1, 12), LoadSceneMode.Single);
 
     }
 
@@ -433,6 +449,7 @@ public class PlayerNetwork : NetworkBehaviour
     }
 
     private void CycleSpectator() {
+        if (!roundInProgress) return;
         int prevIndex = specIndex;
         int i = 0;
 

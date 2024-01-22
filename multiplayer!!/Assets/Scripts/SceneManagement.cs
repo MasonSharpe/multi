@@ -85,4 +85,12 @@ public class SceneManagement : NetworkBehaviour {
         }
 
     }
+    [ServerRpc(RequireOwnership = false)]
+    public void ResetScoreServerRpc() {
+        if (!IsServer) return;
+        foreach (PlayerNetwork player in players) {
+            player.ResetScoreClientRpc();
+        }
+
+    }
 }

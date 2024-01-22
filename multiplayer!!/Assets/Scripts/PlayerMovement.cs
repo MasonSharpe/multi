@@ -197,6 +197,7 @@ public class PlayerMovement : NetworkBehaviour {
         if (collision.gameObject.layer == 12)
         {
             Vector2 vector2 = collision.transform.parent.GetComponent<Rigidbody2D>().velocity;
+            vector2.y = 0;
             platformAdder = vector2;
         }
     }

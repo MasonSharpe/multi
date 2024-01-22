@@ -12,8 +12,14 @@ public class PlayerUI : MonoBehaviour
     public PlayerMovement movement;
     public PlayerNetwork player;
     public Transform leaderboard;
+    public TextMeshProUGUI playerCount;
     public Transform deathFeed;
+    public DeathEntry killPrefab;
+    public Transform killHolder;
     public TextMeshProUGUI spectateText;
+    public Image fade;
+
+    private float fadeTimer = -1;
 
     private void Update() {
         float fuel = player.spectating ? player.players[player.specIndex].movement.rocketTimer.Value : movement.rocketTimer.Value;
@@ -27,5 +33,31 @@ public class PlayerUI : MonoBehaviour
             rocketBackground.color = new Color(0.2f, 0.2f, 0.2f, 0.3f);
             rocketText.color = new Color(1f, 1f, 1f, 0.3f);
         }
+
+        if (fadeTimer != -1)
+        {
+            fadeTimer += Time.deltaTime;
+            if (fadeTimer < 1)
+            {
+                fade.color = new Color(0, 0, 0, fadeTimer);
+            }
+            else
+            {
+                if (fadeTimer < 2)
+                {
+                    fade.color = new Color(0, 0, 0, 2 - fadeTimer);
+                }
+                else
+                {
+                    fadeTimer = -1;
+                    fade.color = new Color(0, 0, 0, 0);
+                }
+            }
+        }
+    }
+
+    public void Fade()
+    {
+        fadeTimer = 0;
     }
 }

@@ -9,7 +9,6 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using Unity.Collections;
 using System.Linq;
-using static Cinemachine.DocumentationSortingAttribute;
 
 
 public class PlayerNetwork : NetworkBehaviour
@@ -49,6 +48,9 @@ public class PlayerNetwork : NetworkBehaviour
     public bool roundInProgress = false;
     public float invincibilityTimer = 0;
     public bool desiresDeath = false;
+    public int previousLevel = -1;
+    private float nextLevelTimer = -1;
+    private string nextLevel = "";
 
     /*SONGS
      * Lobby song: 27
@@ -59,20 +61,34 @@ public class PlayerNetwork : NetworkBehaviour
      * used: 1 6 10 7 11 9 13 5 8 16 2
      */
 
-    /*LEVElS
-     * Short: 4/5
-     * small platforms, lava closing in all sides//       extreme: same but one tiny platform//          big arena, lava blocks everywhere //       lots of hazards//
-     * Long: 9/10
-     * hole in the wall//      default obby//       extreme: lava rising//    see-saw//       lava rising chill//       building climbing       tight jumps//     catch up to a running goal//
-     * moving platforms everywhre
+    /*LEVElS TO ADD
      * 
+     *       building climbing
      * 
-     * screen fade
+     * ok what do i do now lol:
      * 
-     * PROBLEMS:
-     * 
-     * 
-     * 
+     * settings
+     * pause menu
+     * more sfx for buttons
+     * playtesting
+     * more levels
+     * more host commands
+     * more intuative connection system, no camera canvas
+     * actual tutorial (with story)
+     * change difficulty of levels
+     * more mechanics for engagement
+     * an actual main menu
+     * more animation in UI
+     * better lava texture
+     * make combat better (parry???)
+     * prevent clumping in beginning
+     * gamefreeze optimizing
+     * improve lighting
+     * make clouds actually move
+     * 3D audio for nearby players
+     * lobby countdown
+     * main menu art
+     * add normal maps and effects to animations
      */
 
     public override void OnNetworkSpawn()
@@ -86,16 +102,18 @@ public class PlayerNetwork : NetworkBehaviour
             sprite1.sortingOrder = 5;
             sprite2.sortingOrder = 7;
             sprite3.sortingOrder = 6;
-            visibleUsername.color = Color.yellow;
+            visibleUsername.color = new Color(1, 1, 0.4f, 0.5f);
             source.PlayOneShot(clips[9]);
-            
+
+
             if (SceneManager.GetActiveScene().name != "Lobby Scene") {
                 StartSpectating();
                 UI.spectateText.text = "you joined late! just chill here                       until the round ends, thanks <3";
             }
         }
 
-
+        players = FindObjectsOfType<PlayerNetwork>().ToList();
+        UpdateLeaderboard();
         base.OnNetworkSpawn();
     }
 
@@ -174,13 +192,39 @@ public class PlayerNetwork : NetworkBehaviour
             }
         }
 
+        if (nextLevelTimer != -1)
+        {
+            nextLevelTimer += Time.deltaTime;
+
+            if (nextLevelTimer > 1)
+            {
+                NetworkManager.Singleton.SceneManager.LoadScene(nextLevel, LoadSceneMode.Single);
+                nextLevelTimer = -1;
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+
+            UI.leaderboard.transform.parent.gameObject.SetActive(true);
+        }
+        if (Input.GetKeyUp(KeyCode.Tab))
+        {
+            UI.leaderboard.transform.parent.gameObject.SetActive(false);
+        }
+
         if (Input.GetKeyDown(KeyCode.Q)) {
             if (spectating) CycleSpectator();
         }
         if (Input.GetKeyDown(KeyCode.P)) {
             if (IsServer) {
-                string level = SceneManager.GetActiveScene().name == "Lobby Scene" ? "Level1" : "Level" + UnityEngine.Random.Range(1, 12);
-                NetworkManager.Singleton.SceneManager.LoadScene(level, LoadSceneMode.Single);
+                int ind = -1;
+                while (ind == previousLevel) ind = UnityEngine.Random.Range(1, 12);
+                string level = SceneManager.GetActiveScene().name == "Lobby Scene" ? "Level1" : "Level" + ind;
+                previousLevel = ind;
+                UI.Fade();
+                nextLevelTimer = 0;
+                nextLevel = level;
             }
         }
         if (Input.GetKeyDown(KeyCode.L)) {
@@ -246,14 +290,14 @@ public class PlayerNetwork : NetworkBehaviour
             if (player.killer.Value != -1) {
 
                 DeathEntry[] DeathEntries = UI.deathFeed.GetComponentsInChildren<DeathEntry>();
-                bool doubleFailsafe = false;
-                foreach (DeathEntry failEntry in DeathEntries) {
-                    if (failEntry.player == (int)player.OwnerClientId) {
-                        doubleFailsafe = true;
-                        break;
-                    }
+                List<int> ids = new();
+                ids.Add((int)player.OwnerClientId);
+                foreach (DeathEntry failEntry in DeathEntries)
+                {
+                    if (ids.Contains(failEntry.player)) return;
+                    ids.Add(failEntry.player);
                 }
-                if (doubleFailsafe) return;
+
 
                 DeathEntry entry = Instantiate(deathsEntry, UI.deathFeed);
                 string text;
@@ -262,12 +306,17 @@ public class PlayerNetwork : NetworkBehaviour
                 } else {
                     text = player.username.Value + " was killed by " + players[(int)player.OwnerClientId].username.Value;
                 }
+                entry.player = (int)player.OwnerClientId;
                 entry.deathText = text;
 
                 if ((ulong)player.killer.Value == OwnerClientId && player.OwnerClientId != OwnerClientId) {
                     kills.Value++;
                     points.Value += 2;
                     source.PlayOneShot(clips[7], 0.5f);
+
+                    DeathEntry killEntry = Instantiate(UI.killPrefab, UI.killHolder);
+                    killEntry.player = (int)player.OwnerClientId;
+                    killEntry.deathText = "+Killed " + player.username.Value;
                 }
                 if (player.placement.Value != -1) alive--;
                 sceneManagement.ResetKillerServerRpc((int)player.OwnerClientId);
@@ -345,27 +394,44 @@ public class PlayerNetwork : NetworkBehaviour
 
     [ClientRpc]
     public void EndRaceShowClientRpc() {
+        UpdateLeaderboard();
+        UI.leaderboard.transform.parent.gameObject.SetActive(true);
+
+        Invoke(nameof(GoToNextRace), 5f);
+    }
+
+    public void UpdateLeaderboard()
+    {
+        foreach (Transform child in UI.leaderboard.GetComponentsInChildren<Transform>())
+        {
+            if (child != UI.leaderboard) Destroy(child.gameObject);
+        }
+
         players.Sort((a, b) => b.points.Value.CompareTo(a.points.Value));
-        for (int i = 0; i < players.Count; i++) {
+        UI.playerCount.text = players.Count + " Players";
+        for (int i = 0; i < players.Count; i++)
+        {
             TextMeshProUGUI entry = Instantiate(leaderboardEntry, UI.leaderboard);
-            string suffix = i switch {
+            string suffix = i switch
+            {
                 0 => "st",
                 1 => "nd",
                 2 => "rd",
                 _ => "th"
             };
             entry.text = (i + 1) + suffix + ": " + players[i].username.Value + " - " + players[i].points.Value + " Points (" + players[i].kills.Value + " kills)";
-            if (players[i].OwnerClientId == OwnerClientId) entry.color = Color.yellow;       
+            if (players[i].OwnerClientId == OwnerClientId) entry.color = Color.yellow;
         }
-        UI.leaderboard.transform.parent.gameObject.SetActive(true);
-
-        Invoke(nameof(GoToNextRace), 5f);
     }
 
-
-
     public void GoToNextRace() {
-        if (IsServer && IsOwner) NetworkManager.Singleton.SceneManager.LoadScene("Level" + UnityEngine.Random.Range(1, 12), LoadSceneMode.Single);
+        if (IsServer && IsOwner)
+        {
+            UI.Fade();
+            nextLevelTimer = 0;
+            nextLevel = "Level" + UnityEngine.Random.Range(1, 12);
+            
+        }
 
     }
 
@@ -392,9 +458,7 @@ public class PlayerNetwork : NetworkBehaviour
         spectating = false;
         cam.Priority = 10;
 
-        foreach (Transform child in UI.leaderboard.GetComponentsInChildren<Transform>()) {
-            if (child != UI.leaderboard) Destroy(child.gameObject);
-        }
+
 
         UI.leaderboard.transform.parent.gameObject.SetActive(false);
         UI.spectateText.transform.parent.gameObject.SetActive(false);
@@ -425,7 +489,6 @@ public class PlayerNetwork : NetworkBehaviour
                 if (player.placement.Value == placement.Value && player != this) {
                     placement.Value--;
                 }
-                //print(player.placement.Value);
 
                 if (player.placement.Value != -1) {
                     allVictorious++;

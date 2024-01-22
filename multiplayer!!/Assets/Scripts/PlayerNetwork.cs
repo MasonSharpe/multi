@@ -9,6 +9,7 @@ using UnityEngine.SceneManagement;
 using TMPro;
 using Unity.Collections;
 using System.Linq;
+using static Cinemachine.DocumentationSortingAttribute;
 
 
 public class PlayerNetwork : NetworkBehaviour
@@ -178,8 +179,8 @@ public class PlayerNetwork : NetworkBehaviour
         }
         if (Input.GetKeyDown(KeyCode.P)) {
             if (IsServer) {
-
-                NetworkManager.Singleton.SceneManager.LoadScene("Level1", LoadSceneMode.Single);
+                string level = SceneManager.GetActiveScene().name == "Lobby Scene" ? "Level1" : "Level" + UnityEngine.Random.Range(1, 12);
+                NetworkManager.Singleton.SceneManager.LoadScene(level, LoadSceneMode.Single);
             }
         }
         if (Input.GetKeyDown(KeyCode.L)) {

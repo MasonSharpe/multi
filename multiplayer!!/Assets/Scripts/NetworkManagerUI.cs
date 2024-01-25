@@ -41,9 +41,13 @@ public class NetworkManagerUI : NetworkBehaviour
         client.onClick.AddListener(() =>
         {
             
-             transport.SetConnectionData("127.0.0.1", 7777);// "127.0.0.1"     ipInput.text
+            transport.SetConnectionData("127.0.0.1", 7777);// "127.0.0.1"     ipInput.text
 
             NetworkManager.Singleton.StartClient();
+            //if (!NetworkManager.Singleton.IsConnectedClient)
+           // {
+               // NetworkManager.Singleton.Shutdown();
+            //}
 
         });
     }

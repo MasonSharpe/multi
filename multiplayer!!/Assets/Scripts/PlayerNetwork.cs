@@ -51,6 +51,8 @@ public class PlayerNetwork : NetworkBehaviour
     public int previousLevel = -1;
     private float nextLevelTimer = -1;
     private string nextLevel = "";
+    public bool musicOn = true;
+
 
     /*SONGS
      * Lobby song: 27
@@ -68,27 +70,25 @@ public class PlayerNetwork : NetworkBehaviour
      * ok what do i do now lol:
      * 
      * settings
-     * pause menu
      * more sfx for buttons
      * playtesting
      * more levels
      * more host commands
-     * more intuative connection system, no camera canvas
-     * actual tutorial (with story)
+     * SCRAPPED   actual tutorial (with story)
      * change difficulty of levels
      * more mechanics for engagement
-     * an actual main menu
+     * SCRAPPED   an actual main menu
      * more animation in UI
+     * SCRAPPED make combat better (parry???)
+     * SCRAPPED   prevent clumping in beginning
+     * SCRAPPED 3D audio for nearby players
+     * SCRAPPED   lobby countdown
      * better lava texture
-     * make combat better (parry???)
-     * prevent clumping in beginning
-     * gamefreeze optimizing
-     * improve lighting
-     * make clouds actually move
-     * 3D audio for nearby players
-     * lobby countdown
      * main menu art
      * add normal maps and effects to animations
+     * 
+
+     * 
      */
 
     public override void OnNetworkSpawn()
@@ -131,7 +131,7 @@ public class PlayerNetwork : NetworkBehaviour
             sceneManagement = FindObjectOfType<SceneManagement>(); 
             if (sceneManagement != null) confiner.m_BoundingShape2D = sceneManagement.bounds;
         }
-
+         
 
         if (!IsOwner)
         {
@@ -163,7 +163,7 @@ public class PlayerNetwork : NetworkBehaviour
         if (!spectating) {
             cam.Priority = 11;
             string time = timeInRound < 5 ? "" : (timeInRound - 5).ToString("F2");
-            if (sceneManagement != null) objectiveText.text = sceneManagement.objective + "\r\n" + time;
+            if (sceneManagement != null) objectiveText.text = isInLobby ? "" : sceneManagement.objective + "\r\n" + time;
 
         } else if (players[specIndex].placement.Value != -1) {
             CycleSpectator();
@@ -179,8 +179,16 @@ public class PlayerNetwork : NetworkBehaviour
             }
         }
 
-        if (!roundInProgress && sceneManagement != null && !isInLobby) {
-            sceneManagement.source.volume -= Time.deltaTime / 60f;
+        if (sceneManagement != null)
+        {
+            if (!roundInProgress && !isInLobby)
+            {
+                sceneManagement.source.volume -= Time.deltaTime / 60f;
+            }
+            else
+            {
+                sceneManagement.source.volume = musicOn ? 0.078f : 0;
+            }
         }
 
         if (isInLobby) {
@@ -189,6 +197,11 @@ public class PlayerNetwork : NetworkBehaviour
             }
             if (Input.GetKeyDown(KeyCode.Alpha2)) {
                 color2.Value = new Color(UnityEngine.Random.Range(0f, 1), UnityEngine.Random.Range(0f, 1), UnityEngine.Random.Range(0f, 1));
+            }
+            if (Input.GetKeyDown(KeyCode.Alpha3))
+            {
+                color1.Value = new Color(1, 1, 1);
+                color2.Value = new Color(0.92f, 0.58f, 0.58f);
             }
         }
 
@@ -203,26 +216,37 @@ public class PlayerNetwork : NetworkBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.Tab))
+        if (Input.GetKeyDown(KeyCode.Tab) && (isInLobby || roundInProgress))
         {
 
             UI.leaderboard.transform.parent.gameObject.SetActive(true);
         }
-        if (Input.GetKeyUp(KeyCode.Tab))
+        if (Input.GetKeyUp(KeyCode.Tab) && (isInLobby || roundInProgress))
         {
             UI.leaderboard.transform.parent.gameObject.SetActive(false);
         }
-
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            UI.pauseScreen.SetActive(!UI.pauseScreen.activeSelf);
+        }
         if (Input.GetKeyDown(KeyCode.Q)) {
             if (spectating) CycleSpectator();
         }
         if (Input.GetKeyDown(KeyCode.P)) {
             if (IsServer) {
-                int ind = -1;
-                while (ind == previousLevel) ind = UnityEngine.Random.Range(1, 12);
-                string level = SceneManager.GetActiveScene().name == "Lobby Scene" ? "Level1" : "Level" + ind;
-                previousLevel = ind;
-                UI.Fade();
+                string level;
+                if (Input.GetKey(KeyCode.LeftShift))
+                {
+                    level = "Lobby Scene";
+                }
+                else
+                {
+                    int ind = UnityEngine.Random.Range(1, 12);
+                    while (ind == previousLevel) ind = UnityEngine.Random.Range(1, 12);
+                    level = SceneManager.GetActiveScene().name == "Lobby Scene" ? "Level1" : "Level" + ind;
+                    previousLevel = ind;
+                }
+                sceneManagement.FadeServerRpc();
                 nextLevelTimer = 0;
                 nextLevel = level;
             }
@@ -234,6 +258,12 @@ public class PlayerNetwork : NetworkBehaviour
             }
         }
 
+    }
+
+    [ClientRpc]
+    public void FadeClientRpc()
+    {
+        UI.Fade();
     }
     [ClientRpc]
     public void ResetScoreClientRpc() {
@@ -427,7 +457,7 @@ public class PlayerNetwork : NetworkBehaviour
     public void GoToNextRace() {
         if (IsServer && IsOwner)
         {
-            UI.Fade();
+            sceneManagement.FadeServerRpc();
             nextLevelTimer = 0;
             nextLevel = "Level" + UnityEngine.Random.Range(1, 12);
             

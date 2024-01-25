@@ -25,6 +25,8 @@ public class PlayerMovement : NetworkBehaviour {
     public float refuelMult = 4;
     private Vector2 rotateVector = new();
     public Vector2 platformAdder = new();
+    private bool canResetKiller;
+    private float resetKillerTimer = 0;
 
     public float timeInRound = 0;
 
@@ -49,10 +51,10 @@ public class PlayerMovement : NetworkBehaviour {
     void Update() {
 
         blast.enabled = blastActive.Value;
-        blast.size = new Vector2((blastPower.Value / 5f) + 1, (blastPower.Value / 5f) + 2);
+        blast.size = new Vector2((blastPower.Value / 5f) + 2.5f, (blastPower.Value / 5f) + 3.5f);
 
         if (!IsOwner || player.spectating) return;
-
+        bool paused = player.UI.pauseScreen.activeSelf;
         bool check = Physics2D.OverlapArea(new Vector2(groundCheck.position.x - 0.25f, groundCheck.position.y - 0.1f), new Vector2(groundCheck.position.x + 0.25f, groundCheck.position.y + 0.1f), groundLayer);
 
         if (check) isCoyote = false;
@@ -62,7 +64,7 @@ public class PlayerMovement : NetworkBehaviour {
             check = coyoteTime > 0;
             if (!check || Input.GetButton("Jump")) isCoyote = false;
         }
-        if (!isGrounded && check)
+        if (!isGrounded && check && canResetKiller)
         {
             player.killer.Value = -1;
             animator.SetTrigger("justGrounded");
@@ -78,6 +80,12 @@ public class PlayerMovement : NetworkBehaviour {
         if (Physics2D.OverlapBox(new Vector2(groundCheck.position.x, groundCheck.position.y + 1), Vector2.one * 1.1f, 0, groundLayer)) {
             rocketHorizontalVelocity = 0;
         }
+        if (!canResetKiller && resetKillerTimer < 0)
+        {
+            canResetKiller = true;
+            if (check) player.killer.Value = -1;
+        }
+
         float frictionMult = isGrounded ? 2 : 1;
         if (Mathf.Abs(rocketHorizontalVelocity) < 0.2f) {
             rocketHorizontalVelocity = 0;
@@ -89,7 +97,7 @@ public class PlayerMovement : NetworkBehaviour {
             }
         }
 
-        float x = Input.GetAxis("Horizontal");
+        float x = paused ? 0 : Input.GetAxis("Horizontal");
         rb.velocity = new Vector2(x * speed + rocketHorizontalVelocity, rb.velocity.y) + platformAdder;
         animator.SetFloat("x", x);
         if (x != 0 && isGrounded)
@@ -102,7 +110,7 @@ public class PlayerMovement : NetworkBehaviour {
             }
         }
 
-        if (isGrounded && Input.GetButton("Jump")) {
+        if (isGrounded && Input.GetButton("Jump") && !paused) {
             rb.velocity = new Vector2(rb.velocity.x, jumpForce);
             if (jumpSoundTimer < 0)
             {
@@ -118,25 +126,28 @@ public class PlayerMovement : NetworkBehaviour {
         cameraOffsetTimer -= Time.deltaTime;
         jumpSoundTimer -= Time.deltaTime;
         rotatedTimer -= Time.deltaTime;
+        resetKillerTimer -= Time.deltaTime;
 
-        float newValue = Mathf.Clamp(rocketTimer.Value + Time.deltaTime * refuelMult, -3, 20);
+
+        float newValue = Mathf.Clamp(rocketTimer.Value + Time.deltaTime * refuelMult, -4, 20);
         if (rocketTimer.Value < 20 && newValue >= 20) player.source.PlayOneShot(player.clips[10], 0.7f);
         if (timeInRound > 5 || SceneManager.GetActiveScene().name == "Lobby Scene") rocketTimer.Value = newValue;
 
-        if (Input.GetKeyDown(KeyCode.LeftShift) && rocketTimer.Value >= 0) {
+        if (Input.GetKeyDown(KeyCode.LeftShift) && rocketTimer.Value >= 0 && !paused) {
             Vector2 vector = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
             if (vector == Vector2.zero) vector = Vector2.up;
+            if (rb.velocity.y < 0) rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y / 1.5f);
             rb.velocity = (vector.y * (rocketTimer.Value * 0.9f) + (rb.velocity.y / 2)) * Vector2.up;
             rocketHorizontalVelocity = vector.x * rocketTimer.Value * 0.9f;
 
-            blastActive.Value = true;
             blastPower.Value = rocketTimer.Value;
-            blastTimer = 0.2f;
+            blastActive.Value = true;
+            blastTimer = 0.4f;
 
             cameraOffsetTimer = 0.4f;
             cameraShakePower = blastPower.Value / 16f;
 
-            rocketTimer.Value = -3;
+            rocketTimer.Value = -4;
 
             player.source.PlayOneShot(player.clips[0], 0.7f);
             if (blastPower.Value > 3) {
@@ -165,6 +176,7 @@ public class PlayerMovement : NetworkBehaviour {
         } else {
             cameraOffset.transform.localPosition = Vector3.zero;
         }
+        print(player.killer.Value == -1);
     }
 
     private void OnTriggerEnter2D(Collider2D collision) {
@@ -172,13 +184,15 @@ public class PlayerMovement : NetworkBehaviour {
             Vector2 center = collision.transform.position;
             Vector2 vector = (Vector2)transform.position - center;
             float power = collision.GetComponent<CapsuleCollider2D>().size.x * 6;
-            Vector2 force = vector.normalized * (Vector2.one / Mathf.Clamp(vector.magnitude, 1f, 10)) * power;
+            Vector2 force = vector.normalized * (Vector2.one / Mathf.Clamp(vector.magnitude, 1f, 3)) * power * 1.25f;
             rb.velocity += new Vector2(0, force.y);
             rocketHorizontalVelocity += force.x;
 
             invincibilityTimer = 0.2f;
             int dealer = (int)collision.transform.parent.GetComponent<PlayerNetwork>().OwnerClientId;
             player.killer.Value = dealer;
+            if (power > 20) resetKillerTimer = 2;
+            canResetKiller = false;
             player.sceneManagement.PlayPingServerRpc(dealer);
             cameraOffsetTimer = 0.4f;
             cameraShakePower = power / 16f;

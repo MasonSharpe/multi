@@ -4,6 +4,7 @@ using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class PlayerUI : MonoBehaviour
 {
@@ -18,6 +19,7 @@ public class PlayerUI : MonoBehaviour
     public Transform killHolder;
     public TextMeshProUGUI spectateText;
     public Image fade;
+    public GameObject pauseScreen;
 
     private float fadeTimer = -1;
 
@@ -37,15 +39,15 @@ public class PlayerUI : MonoBehaviour
         if (fadeTimer != -1)
         {
             fadeTimer += Time.deltaTime;
-            if (fadeTimer < 1)
+            if (fadeTimer < 1.6f)
             {
                 fade.color = new Color(0, 0, 0, fadeTimer);
             }
             else
             {
-                if (fadeTimer < 2)
+                if (fadeTimer < 2.6f)
                 {
-                    fade.color = new Color(0, 0, 0, 2 - fadeTimer);
+                    fade.color = new Color(0, 0, 0, 2.6f - fadeTimer);
                 }
                 else
                 {
@@ -59,5 +61,23 @@ public class PlayerUI : MonoBehaviour
     public void Fade()
     {
         fadeTimer = 0;
+    }
+
+    public void Resume()
+    {
+        player.source.PlayOneShot(player.clips[9], 0.7f);
+        pauseScreen.SetActive(false);
+    }
+    public void Disconnect()
+    {
+        player.source.PlayOneShot(player.clips[9], 0.7f);
+        NetworkManager.Singleton.Shutdown();
+        SceneManager.LoadScene("Lobby Scene");
+    }
+
+    public void ToggledMusic()
+    {
+        player.source.PlayOneShot(player.clips[9], 0.7f);
+        player.musicOn = !player.musicOn;
     }
 }

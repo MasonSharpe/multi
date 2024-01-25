@@ -28,7 +28,6 @@ public class SceneManagement : NetworkBehaviour {
 
 
 
-
     private void Start() {
     if (!IsServer) return;
 
@@ -90,6 +89,17 @@ public class SceneManagement : NetworkBehaviour {
         if (!IsServer) return;
         foreach (PlayerNetwork player in players) {
             player.ResetScoreClientRpc();
+        }
+
+    }
+    [ServerRpc(RequireOwnership = false)]
+    public void FadeServerRpc()
+    {
+        if (!IsServer) return;
+        if (players.Count == 0) players = FindObjectsOfType<PlayerNetwork>().ToList();
+        foreach (PlayerNetwork player in players)
+        {
+            player.FadeClientRpc();
         }
 
     }

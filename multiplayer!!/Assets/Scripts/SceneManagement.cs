@@ -12,6 +12,7 @@ public class SceneManagement : NetworkBehaviour {
     public string objective;
     public AudioSource source;
     private bool songPlayed = false;
+    private float updatePlayersTimer = 0;
 
 
     private void Awake() {
@@ -25,7 +26,13 @@ public class SceneManagement : NetworkBehaviour {
         }
     }
 
-
+    private void Update() {
+        updatePlayersTimer -= Time.deltaTime;
+        if (updatePlayersTimer < 0) {
+            players = FindObjectsOfType<PlayerNetwork>().ToList();
+            updatePlayersTimer = 0.5f;
+        }
+    }
 
 
     private void Start() {

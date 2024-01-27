@@ -52,6 +52,7 @@ public class PlayerNetwork : NetworkBehaviour
     private float nextLevelTimer = -1;
     private string nextLevel = "";
     public bool musicOn = true;
+    private float updatePlayersTimer = 0;
 
 
     /*SONGS
@@ -69,8 +70,7 @@ public class PlayerNetwork : NetworkBehaviour
      * 
      * ok what do i do now lol:
      * 
-     * settings
-     * more sfx for buttons
+
      * playtesting
      * more levels
      * more host commands
@@ -83,11 +83,8 @@ public class PlayerNetwork : NetworkBehaviour
      * SCRAPPED   prevent clumping in beginning
      * SCRAPPED 3D audio for nearby players
      * SCRAPPED   lobby countdown
-     * better lava texture
+     * lava grid texturing
      * main menu art
-     * add normal maps and effects to animations
-     * 
-
      * 
      */
 
@@ -117,6 +114,7 @@ public class PlayerNetwork : NetworkBehaviour
         base.OnNetworkSpawn();
     }
 
+
     private void Update()
     {
         sprite1.color = color1.Value;
@@ -124,6 +122,7 @@ public class PlayerNetwork : NetworkBehaviour
         visibleUsername.text = username.Value.ToString();
         timeInRound += Time.deltaTime;
         invincibilityTimer -= Time.deltaTime;
+        updatePlayersTimer -= Time.deltaTime;
 
         bool isInLobby = SceneManager.GetActiveScene().name == "Lobby Scene";
 
@@ -139,6 +138,11 @@ public class PlayerNetwork : NetworkBehaviour
             sprite2.color = new Color(color2.Value.r, color2.Value.g, color2.Value.b, 0.7f);
             sprite3.color = new Color(1, 1, 1, 0.7f);
             return;
+        }
+
+        if (updatePlayersTimer < 0) {
+            players = FindObjectsOfType<PlayerNetwork>().ToList();
+            updatePlayersTimer = 0.5f;
         }
 
         if (desiresDeath) {
@@ -243,7 +247,7 @@ public class PlayerNetwork : NetworkBehaviour
                 {
                     int ind = UnityEngine.Random.Range(1, 12);
                     while (ind == previousLevel) ind = UnityEngine.Random.Range(1, 12);
-                    level = SceneManager.GetActiveScene().name == "Lobby Scene" ? "Level1" : "Level" + ind;
+                    level = SceneManager.GetActiveScene().name == "Lobby Scene" ? "Level1" : "Level" + 6;
                     previousLevel = ind;
                 }
                 sceneManagement.FadeServerRpc();

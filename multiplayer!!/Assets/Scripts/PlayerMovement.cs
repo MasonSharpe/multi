@@ -176,7 +176,6 @@ public class PlayerMovement : NetworkBehaviour {
         } else {
             cameraOffset.transform.localPosition = Vector3.zero;
         }
-        print(player.killer.Value == -1);
     }
 
     private void OnTriggerEnter2D(Collider2D collision) {
@@ -193,7 +192,7 @@ public class PlayerMovement : NetworkBehaviour {
             player.killer.Value = dealer;
             if (power > 20) resetKillerTimer = 2;
             canResetKiller = false;
-            player.sceneManagement.PlayPingServerRpc(dealer);
+            if (player.sceneManagement != null) player.sceneManagement.PlayPingServerRpc(dealer);
             cameraOffsetTimer = 0.4f;
             cameraShakePower = power / 16f;
 

@@ -183,7 +183,7 @@ public class PlayerMovement : NetworkBehaviour {
             Vector2 center = collision.transform.position;
             Vector2 vector = (Vector2)transform.position - center;
             float power = collision.GetComponent<CapsuleCollider2D>().size.x * 6;
-            Vector2 force = vector.normalized * (Vector2.one / Mathf.Clamp(vector.magnitude, 1f, 3)) * power * 1.25f;
+            Vector2 force = vector.normalized * (Vector2.one / Mathf.Clamp(vector.magnitude, 1.5f, 3)) * power;
             rb.velocity += new Vector2(0, force.y);
             rocketHorizontalVelocity += force.x;
 

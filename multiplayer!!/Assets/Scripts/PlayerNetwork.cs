@@ -24,6 +24,7 @@ public class PlayerNetwork : NetworkBehaviour
     private NetworkVariable<int> kills = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     public NetworkVariable<int> killer = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
     public NetworkVariable<float> timeInLimbo = new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<int> currentlySpectating = new(-1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
     public PlayerUI UI;
     public TextMeshProUGUI visibleUsername;
@@ -71,8 +72,6 @@ public class PlayerNetwork : NetworkBehaviour
      * ok what do i do now lol:
      * 
 
-     * playtesting
-     * more levels
      * more host commands
      * SCRAPPED   actual tutorial (with story)
      * change difficulty of levels
@@ -87,15 +86,7 @@ public class PlayerNetwork : NetworkBehaviour
      * main menu art
      * 
      * 
-     * BIG PLAYTEST OOPSIES
      * 
-     * kill feed produces wrong killers
-     * kill feed occasionally says everyone dies when one dies
-     * when i host, people are stuck spectating me
-     * quitting from pause menu is broke
-     * distance knockback weird
-     * catch level too gast
-     * adjust lavas
      */
 
     public override void OnNetworkSpawn()
@@ -178,6 +169,11 @@ public class PlayerNetwork : NetworkBehaviour
             cam.Priority = 11;
             string time = timeInRound < 5 ? "" : (timeInRound - 5).ToString("F2");
             if (sceneManagement != null) objectiveText.text = isInLobby ? "" : sceneManagement.objective + "\r\n" + time;
+            int specAmount = 0;
+            foreach (PlayerNetwork player in players) {
+                if (player.currentlySpectating.Value == (int)OwnerClientId) specAmount++;
+            }
+            UI.spectateCounter.text = specAmount.ToString();
 
         } else
         {
@@ -342,9 +338,12 @@ public class PlayerNetwork : NetworkBehaviour
 
             if (player.killer.Value != -1) {
 
+                PlayerNetwork killer = players.Find(element => (int)element.OwnerClientId == player.killer.Value);
+
                 DeathEntry[] DeathEntries = UI.deathFeed.GetComponentsInChildren<DeathEntry>();
-                List<int> ids = new();
-                ids.Add((int)player.OwnerClientId);
+                List<int> ids = new() {
+                    (int)player.OwnerClientId
+                };
                 foreach (DeathEntry failEntry in DeathEntries)
                 {
                     if (ids.Contains(failEntry.player)) return;
@@ -357,7 +356,7 @@ public class PlayerNetwork : NetworkBehaviour
                 if (player.killer.Value == -2) {
                     text = player.username.Value + " succumbed to the lava.";
                 } else {
-                    text = player.username.Value + " was killed by " + players[(int)player.OwnerClientId].username.Value;
+                    text = player.username.Value + " was killed by " + killer.username.Value;
                 }
                 entry.player = (int)player.OwnerClientId;
                 entry.deathText = text;
@@ -373,7 +372,7 @@ public class PlayerNetwork : NetworkBehaviour
                 }
                 if (player.placement.Value != -1) alive--;
                 sceneManagement.ResetKillerServerRpc((int)player.OwnerClientId);
-
+                return;
             } 
 
         }
@@ -507,12 +506,13 @@ public class PlayerNetwork : NetworkBehaviour
             killer.Value = -1;
             movement.rocketTimer.Value = -20;
             timeInLimbo.Value = -1;
+            currentlySpectating.Value = -1;
         }
         spectating = false;
         cam.Priority = 10;
 
 
-
+        UI.spectateCounter.transform.parent.gameObject.SetActive(true);
         UI.leaderboard.transform.parent.gameObject.SetActive(false);
         UI.spectateText.transform.parent.gameObject.SetActive(false);
 
@@ -581,6 +581,7 @@ public class PlayerNetwork : NetworkBehaviour
             players[prevIndex].cam.Priority = 10;
             players[specIndex].cam.Priority = 11;
             UI.spectateText.text = "Spectating: " + players[specIndex].username.Value + "\r\n(Q to switch)";
+            currentlySpectating.Value = specIndex;
         }
 
     }
@@ -588,6 +589,7 @@ public class PlayerNetwork : NetworkBehaviour
     private void StartSpectating() {
         spectating = true;
         UI.spectateText.transform.parent.gameObject.SetActive(true);
+        UI.spectateCounter.transform.parent.gameObject.SetActive(false);
         CycleSpectator();
     }
 }

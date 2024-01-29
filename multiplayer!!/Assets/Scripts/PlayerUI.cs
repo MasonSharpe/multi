@@ -20,6 +20,7 @@ public class PlayerUI : MonoBehaviour
     public TextMeshProUGUI spectateText;
     public Image fade;
     public GameObject pauseScreen;
+    public TextMeshProUGUI spectateCounter;
 
     private float fadeTimer = -1;
 

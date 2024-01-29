@@ -30,7 +30,7 @@ public class NetworkManagerUI : NetworkBehaviour
         host.onClick.AddListener(() =>
         {
             string IP = GetIP();
-            transport.SetConnectionData("127.0.0.1", 7777);
+            transport.SetConnectionData(IP, 7777);
             NetworkManager.Singleton.StartHost();
 
             hostText.text = "Host IP: " + IP;
@@ -41,7 +41,7 @@ public class NetworkManagerUI : NetworkBehaviour
         client.onClick.AddListener(() =>
         {
             
-            transport.SetConnectionData("127.0.0.1", 7777);// "127.0.0.1"     ipInput.text
+            transport.SetConnectionData(ipInput.text, 7777);// "127.0.0.1"     ipInput.text
 
             NetworkManager.Singleton.StartClient();
             //if (!NetworkManager.Singleton.IsConnectedClient)
@@ -56,5 +56,9 @@ public class NetworkManagerUI : NetworkBehaviour
         var ipEntry = Dns.GetHostEntry(strHostName);
         var addr = ipEntry.AddressList;
         return addr[0].ToString();
+    }
+    public void Quit()
+    {
+        Application.Quit();
     }
 }

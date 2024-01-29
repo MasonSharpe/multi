@@ -129,7 +129,7 @@ public class PlayerMovement : NetworkBehaviour {
         resetKillerTimer -= Time.deltaTime;
 
 
-        float newValue = Mathf.Clamp(rocketTimer.Value + Time.deltaTime * refuelMult, -4, 20);
+        float newValue = Mathf.Clamp(rocketTimer.Value + Time.deltaTime * refuelMult, -15, 20);
         if (rocketTimer.Value < 20 && newValue >= 20) player.source.PlayOneShot(player.clips[10], 0.7f);
         if (timeInRound > 5 || SceneManager.GetActiveScene().name == "Lobby Scene") rocketTimer.Value = newValue;
 

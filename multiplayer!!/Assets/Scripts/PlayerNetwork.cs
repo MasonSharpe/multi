@@ -86,6 +86,16 @@ public class PlayerNetwork : NetworkBehaviour
      * lava grid texturing
      * main menu art
      * 
+     * 
+     * BIG PLAYTEST OOPSIES
+     * 
+     * kill feed produces wrong killers
+     * kill feed occasionally says everyone dies when one dies
+     * when i host, people are stuck spectating me
+     * quitting from pause menu is broke
+     * distance knockback weird
+     * catch level too gast
+     * adjust lavas
      */
 
     public override void OnNetworkSpawn()
@@ -169,8 +179,17 @@ public class PlayerNetwork : NetworkBehaviour
             string time = timeInRound < 5 ? "" : (timeInRound - 5).ToString("F2");
             if (sceneManagement != null) objectiveText.text = isInLobby ? "" : sceneManagement.objective + "\r\n" + time;
 
-        } else if (players[specIndex].placement.Value != -1) {
-            CycleSpectator();
+        } else
+        {
+            if (players[specIndex].placement.Value != -1){
+                CycleSpectator();
+            }
+            if (roundInProgress && placement.Value == -1)
+            {
+                spectating = false;
+                UI.spectateText.transform.parent.gameObject.SetActive(false);
+                cam.Priority = 10;
+            }
         }
 
         if (timeInRound > 2 && !isInLobby) {
@@ -245,9 +264,9 @@ public class PlayerNetwork : NetworkBehaviour
                 }
                 else
                 {
-                    int ind = UnityEngine.Random.Range(1, 12);
-                    while (ind == previousLevel) ind = UnityEngine.Random.Range(1, 12);
-                    level = SceneManager.GetActiveScene().name == "Lobby Scene" ? "Level1" : "Level" + 6;
+                    int ind = UnityEngine.Random.Range(1, 13);
+                    while (ind == previousLevel) ind = UnityEngine.Random.Range(1, 13);
+                    level = SceneManager.GetActiveScene().name == "Lobby Scene" ? "Level1" : "Level" + ind;
                     previousLevel = ind;
                 }
                 sceneManagement.FadeServerRpc();
@@ -486,7 +505,7 @@ public class PlayerNetwork : NetworkBehaviour
         if (IsOwner) {
             placement.Value = -1;
             killer.Value = -1;
-            movement.rocketTimer.Value = 0;
+            movement.rocketTimer.Value = -20;
             timeInLimbo.Value = -1;
         }
         spectating = false;

@@ -131,6 +131,7 @@ public class PlayerNetwork : NetworkBehaviour
             sceneManagement = FindObjectOfType<SceneManagement>(); 
             if (sceneManagement != null) confiner.m_BoundingShape2D = sceneManagement.bounds;
         }
+        sprite1.transform.parent.gameObject.SetActive(placement.Value == -1);
         UpdateLeaderboard();
 
         if (!IsOwner)
@@ -178,16 +179,8 @@ public class PlayerNetwork : NetworkBehaviour
 
         } else
         {
-            PlayerNetwork specPlayer = players[0];
-            foreach (PlayerNetwork player in players)
-            {
-                if (specIndex == (int)player.OwnerClientId)
-                {
-                    specPlayer = player;
-                    break;
-                }
-            }
-            if (specPlayer.placement.Value != -1){
+
+            if (players[specIndex].placement.Value != -1){
                 CycleSpectator();
             }
             if (roundInProgress && placement.Value == -1)
@@ -513,9 +506,14 @@ public class PlayerNetwork : NetworkBehaviour
 
     }
 
+    public void TransformFix() {
+        transform.position = Vector3.zero;
+    }
+
     [ClientRpc]
     public void StartRaceClientRpc() {
         transform.position = Vector3.zero;
+        Invoke(nameof(TransformFix), 0.3f);
         countdown.text = "";
         timeInRound = 0;
         desiresDeath = false;

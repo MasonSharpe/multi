@@ -131,7 +131,7 @@ public class PlayerNetwork : NetworkBehaviour
             sceneManagement = FindObjectOfType<SceneManagement>(); 
             if (sceneManagement != null) confiner.m_BoundingShape2D = sceneManagement.bounds;
         }
-         
+        UpdateLeaderboard();
 
         if (!IsOwner)
         {
@@ -504,7 +504,7 @@ public class PlayerNetwork : NetworkBehaviour
         if (IsOwner) {
             placement.Value = -1;
             killer.Value = -1;
-            movement.rocketTimer.Value = -20;
+            movement.rocketTimer.Value = -15;
             timeInLimbo.Value = -1;
             currentlySpectating.Value = -1;
         }
@@ -581,7 +581,7 @@ public class PlayerNetwork : NetworkBehaviour
             players[prevIndex].cam.Priority = 10;
             players[specIndex].cam.Priority = 11;
             UI.spectateText.text = "Spectating: " + players[specIndex].username.Value + "\r\n(Q to switch)";
-            currentlySpectating.Value = specIndex;
+            currentlySpectating.Value = (int)players[specIndex].OwnerClientId;
         }
 
     }

@@ -22,11 +22,12 @@ public class PlayerMovement : NetworkBehaviour {
     private float footstepTimer = -1f;
     private float jumpSoundTimer = -1;
     private float rotatedTimer = -1;
-    public float refuelMult = 4;
+    public float refuelMult = 5;
     private Vector2 rotateVector = new();
     public Vector2 platformAdder = new();
     private bool canResetKiller;
     private float resetKillerTimer = 0;
+    private bool godMode = false;
 
     public float timeInRound = 0;
 
@@ -132,6 +133,7 @@ public class PlayerMovement : NetworkBehaviour {
         float newValue = Mathf.Clamp(rocketTimer.Value + Time.deltaTime * refuelMult, -15, 20);
         if (rocketTimer.Value < 20 && newValue >= 20) player.source.PlayOneShot(player.clips[10], 0.7f);
         if (timeInRound > 5 || SceneManager.GetActiveScene().name == "Lobby Scene") rocketTimer.Value = newValue;
+        if (godMode) rocketTimer.Value = 20;
 
         if (Input.GetKeyDown(KeyCode.LeftShift) && rocketTimer.Value >= 0 && !paused) {
             Vector2 vector = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
@@ -147,7 +149,7 @@ public class PlayerMovement : NetworkBehaviour {
             cameraOffsetTimer = 0.4f;
             cameraShakePower = blastPower.Value / 16f;
 
-            rocketTimer.Value = -4;
+            rocketTimer.Value = -6;
 
             player.source.PlayOneShot(player.clips[0], 0.7f);
             if (blastPower.Value > 3) {
@@ -175,6 +177,11 @@ public class PlayerMovement : NetworkBehaviour {
             cameraOffset.transform.localPosition = (Vector3)Random.insideUnitCircle * cameraShakePower;
         } else {
             cameraOffset.transform.localPosition = Vector3.zero;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Alpha0) && IsServer)
+        {
+            godMode = !godMode;
         }
     }
 

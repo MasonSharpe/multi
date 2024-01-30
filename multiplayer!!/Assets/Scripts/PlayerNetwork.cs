@@ -154,6 +154,7 @@ public class PlayerNetwork : NetworkBehaviour
                     if ((int)player.OwnerClientId < lowest && player.timeInLimbo.Value > -1f) {
                         lowest = (int)player.OwnerClientId;
                     }
+                    if (player.placement.Value != -1) player.sprite1.transform.parent.gameObject.SetActive(false);
                 }
                 if (lowest == (int)OwnerClientId){
                     Die();
@@ -177,7 +178,16 @@ public class PlayerNetwork : NetworkBehaviour
 
         } else
         {
-            if (players[specIndex].placement.Value != -1){
+            PlayerNetwork specPlayer = players[0];
+            foreach (PlayerNetwork player in players)
+            {
+                if (specIndex == (int)player.OwnerClientId)
+                {
+                    specPlayer = player;
+                    break;
+                }
+            }
+            if (specPlayer.placement.Value != -1){
                 CycleSpectator();
             }
             if (roundInProgress && placement.Value == -1)
@@ -256,7 +266,15 @@ public class PlayerNetwork : NetworkBehaviour
                 string level;
                 if (Input.GetKey(KeyCode.LeftShift))
                 {
-                    level = "Lobby Scene";
+                    if (Input.GetKey(KeyCode.Tab))
+                    {
+                        level = "Level" + (previousLevel + 1);
+                        if (previousLevel == 13) previousLevel = 1;
+                    }
+                    else
+                    {
+                        level = "Lobby Scene";
+                    }
                 }
                 else
                 {
@@ -326,7 +344,16 @@ public class PlayerNetwork : NetworkBehaviour
 
         DeathEntry entry = Instantiate(deathsEntry, UI.deathFeed);
         entry.player = clientId;
-        entry.deathText = players[clientId].username.Value + " Reached the finish!";
+        PlayerNetwork wonPlayer = players[0];
+        foreach (PlayerNetwork player in players)
+        {
+            if (clientId == (int)player.OwnerClientId)
+            {
+                wonPlayer = player;
+                break;
+            }
+        }
+        entry.deathText = wonPlayer.username.Value + " Reached the finish!";
     }
 
     [ClientRpc]
@@ -377,9 +404,8 @@ public class PlayerNetwork : NetworkBehaviour
 
         }
 
-        if (alive < 6) movement.refuelMult = 5;
-        if (alive < 4) movement.refuelMult = 6;
-        if (alive < 2) movement.refuelMult = 7;
+        if (alive < 6) movement.refuelMult = 6;
+        if (alive < 4) movement.refuelMult = 7;
     }
 
     [ClientRpc]
@@ -520,10 +546,9 @@ public class PlayerNetwork : NetworkBehaviour
         source.PlayOneShot(clips[8]);
 
         int alive = players.Count;
-        movement.refuelMult = 4;
+        movement.refuelMult = 5;
         if (alive < 6) movement.refuelMult += 1;
         if (alive < 4) movement.refuelMult += 1;
-        if (alive < 2) movement.refuelMult += 1;
     }
 
 

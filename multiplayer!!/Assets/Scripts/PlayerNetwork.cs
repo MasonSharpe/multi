@@ -1,15 +1,12 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
-using UnityEngine.UI;
-using System;
 using Cinemachine;
 using UnityEngine.SceneManagement;
 using TMPro;
 using Unity.Collections;
 using System.Linq;
-
+using System.IO;
 
 public class PlayerNetwork : NetworkBehaviour
 {
@@ -54,7 +51,8 @@ public class PlayerNetwork : NetworkBehaviour
     private string nextLevel = "";
     public bool musicOn = true;
     private float updatePlayersTimer = 0;
-
+    public GameObject HostMenu;
+    public GameObject[] Hats;
 
     /*SONGS
      * Lobby song: 27
@@ -100,26 +98,49 @@ public class PlayerNetwork : NetworkBehaviour
             sprite1.sortingOrder = 5;
             sprite2.sortingOrder = 7;
             sprite3.sortingOrder = 6;
+            foreach (GameObject Hat in Hats)
+            {
+                Hat.GetComponent<SpriteRenderer>().sortingOrder = 8;
+            }
             visibleUsername.color = new Color(1, 1, 0.4f, 0.5f);
             source.PlayOneShot(clips[9]);
-
 
             if (SceneManager.GetActiveScene().name != "Lobby Scene") {
                 StartSpectating();
                 UI.spectateText.text = "you joined late! just chill here                       until the round ends, thanks <3";
             }
+
+            if (File.Exists(Application.persistentDataPath + "/Username.txt") && text == "")
+            {
+                StreamReader UserReader = new StreamReader(Application.persistentDataPath + "/Username.txt");
+                string user = UserReader.ReadLine().Split(":")[1].ToString();
+                username.Value = user;
+                Debug.Log(username.Value + " : " + user);
+                UserReader.Close();
+            }
+
+            StreamWriter UsernameStream = new StreamWriter(Application.persistentDataPath + "/Username.txt");
+            UsernameStream.WriteLine("Username:" + username.Value.ToString());
+            UsernameStream.Close();
+
+            StreamReader ColorReader = new StreamReader(Application.persistentDataPath + "/Colors.txt");
+            string ColorData = ColorReader.ReadLine().Split(":")[1];
+            color1.Value = new Color(float.Parse(ColorData.Split(",")[0]), float.Parse(ColorData.Split(",")[1]), float.Parse(ColorData.Split(",")[2]));
+            ColorData = ColorReader.ReadLine().Split(":")[1];
+            color2.Value = new Color(float.Parse(ColorData.Split(",")[0]), float.Parse(ColorData.Split(",")[1]), float.Parse(ColorData.Split(",")[2]));
+            ColorReader.Close();
         }
 
         players = FindObjectsOfType<PlayerNetwork>().ToList();
         UpdateLeaderboard();
         base.OnNetworkSpawn();
     }
-
-
     private void Update()
     {
         sprite1.color = color1.Value;
         sprite2.color = color2.Value;
+        Hats[0].SetActive(username.Value.ToString() == "MarshmallowBoy" || username.Value.ToString() == "Marshmallowboy" || username.Value.ToString() == "Altenator2" || username.Value.ToString() == "Trayson");
+        Hats[1].SetActive(username.Value.ToString() == "SkibidiSterlig" || username.Value.ToString() == "Skibidi Sterlig" || username.Value.ToString() == "Sterlig");
         visibleUsername.text = username.Value.ToString();
         timeInRound += Time.deltaTime;
         invincibilityTimer -= Time.deltaTime;
@@ -128,7 +149,7 @@ public class PlayerNetwork : NetworkBehaviour
         bool isInLobby = SceneManager.GetActiveScene().name == "Lobby Scene";
 
         if (sceneManagement == null) {
-            sceneManagement = FindObjectOfType<SceneManagement>(); 
+            sceneManagement = FindObjectOfType<SceneManagement>();
             if (sceneManagement != null) confiner.m_BoundingShape2D = sceneManagement.bounds;
         }
         sprite1.transform.parent.gameObject.SetActive(placement.Value == -1);
@@ -139,6 +160,10 @@ public class PlayerNetwork : NetworkBehaviour
             sprite1.color = new Color(color1.Value.r, color1.Value.g, color1.Value.b, 0.7f);
             sprite2.color = new Color(color2.Value.r, color2.Value.g, color2.Value.b, 0.7f);
             sprite3.color = new Color(1, 1, 1, 0.7f);
+            foreach (GameObject Hat in Hats)
+            {
+                Hat.GetComponent<SpriteRenderer>().color = new Color(1, 1, 1, 0.7f);
+            }
             return;
         }
 
@@ -216,14 +241,17 @@ public class PlayerNetwork : NetworkBehaviour
         if (isInLobby) {
             if (Input.GetKeyDown(KeyCode.Alpha1)) {
                 color1.Value = new Color(UnityEngine.Random.Range(0f, 1), UnityEngine.Random.Range(0f, 1), UnityEngine.Random.Range(0f, 1));
+                UpdateClothingChanges();
             }
             if (Input.GetKeyDown(KeyCode.Alpha2)) {
                 color2.Value = new Color(UnityEngine.Random.Range(0f, 1), UnityEngine.Random.Range(0f, 1), UnityEngine.Random.Range(0f, 1));
+                UpdateClothingChanges();
             }
             if (Input.GetKeyDown(KeyCode.Alpha3))
             {
                 color1.Value = new Color(1, 1, 1);
                 color2.Value = new Color(0.92f, 0.58f, 0.58f);
+                UpdateClothingChanges();
             }
         }
 
@@ -255,39 +283,68 @@ public class PlayerNetwork : NetworkBehaviour
             if (spectating) CycleSpectator();
         }
         if (Input.GetKeyDown(KeyCode.P)) {
-            if (IsServer) {
-                string level;
-                if (Input.GetKey(KeyCode.LeftShift))
+            LoadNextLevel();
+        }
+        if (Input.GetKeyDown(KeyCode.BackQuote))
+        {
+            if(IsServer)
+                SetGameObjectActive(!HostMenu.activeInHierarchy, HostMenu);
+        }
+        if (Input.GetKeyDown(KeyCode.L)) {
+            ResetScores();
+        }
+
+    }
+
+    void UpdateClothingChanges()
+    {
+        StreamWriter ColorStream = new StreamWriter(Application.persistentDataPath + "/Colors.txt");
+        ColorStream.WriteLine("Color1:" + color1.Value.r + "," + color1.Value.g + "," + color1.Value.b);
+        ColorStream.WriteLine("Color2:" + color2.Value.r + "," + color2.Value.g + "," + color2.Value.b);
+        ColorStream.Close();
+    }
+
+    public void ResetScores()
+    {
+        if (IsServer)
+        {
+            sceneManagement.ResetScoreServerRpc();
+        }
+    }
+
+    public void SetGameObjectActive(bool Active, GameObject Object1)
+    {
+        Object1.SetActive(Active);
+    }
+
+    public void LoadNextLevel()
+    {
+        if (IsServer)
+        {
+            string level;
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                if (Input.GetKey(KeyCode.Tab))
                 {
-                    if (Input.GetKey(KeyCode.Tab))
-                    {
-                        level = "Level" + (previousLevel + 1);
-                        if (previousLevel == 13) previousLevel = 1;
-                    }
-                    else
-                    {
-                        level = "Lobby Scene";
-                    }
+                    level = "Level" + (previousLevel + 1);
+                    if (previousLevel == 13) previousLevel = 1;
                 }
                 else
                 {
-                    int ind = UnityEngine.Random.Range(1, 13);
-                    while (ind == previousLevel) ind = UnityEngine.Random.Range(1, 13);
-                    level = SceneManager.GetActiveScene().name == "Lobby Scene" ? "Level1" : "Level" + ind;
-                    previousLevel = ind;
+                    level = "Lobby Scene";
                 }
-                sceneManagement.FadeServerRpc();
-                nextLevelTimer = 0;
-                nextLevel = level;
             }
-        }
-        if (Input.GetKeyDown(KeyCode.L)) {
-            if (IsServer) {
-
-                sceneManagement.ResetScoreServerRpc();
+            else
+            {
+                int ind = UnityEngine.Random.Range(1, 13);
+                while (ind == previousLevel) ind = UnityEngine.Random.Range(1, 13);
+                level = SceneManager.GetActiveScene().name == "Lobby Scene" ? "Level1" : "Level" + ind;
+                previousLevel = ind;
             }
+            sceneManagement.FadeServerRpc();
+            nextLevelTimer = 0;
+            nextLevel = level;
         }
-
     }
 
     [ClientRpc]

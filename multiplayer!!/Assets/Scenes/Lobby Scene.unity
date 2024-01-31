@@ -49228,7 +49228,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Join Client
+  m_text: Join Game
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: dfe79bd090c2451499dc9d98733ef4ba, type: 2}
   m_sharedMaterial: {fileID: -3880793395465041477, guid: dfe79bd090c2451499dc9d98733ef4ba, type: 2}
